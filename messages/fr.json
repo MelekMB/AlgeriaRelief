@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "title": "Entraide — Feux de forêt en Algérie",
+    "description": "Plateforme reliant les personnes dans le besoin aux donateurs qui livrent directement."
+  },
+  "common": {
+    "languageName": "Français",
+    "switchTo": "العربية",
+    "back": "Retour",
+    "next": "Suivant",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "loading": "Chargement…"
+  },
+  "emergency": {
+    "bannerTitle": "Une vie est-elle en danger immédiat ?",
+    "bannerAction": "Appeler les secours",
+    "civilProtection": "Protection Civile",
+    "police": "Police",
+    "gendarmerie": "Gendarmerie Nationale",
+    "ambulance": "SAMU",
+    "note": "Cette plateforme n'est pas un service de secours. En cas d'urgence, appelez directement les numéros officiels."
+  },
+  "home": {
+    "title": "Entraide feux de forêt",
+    "subtitle": "Demandez de l'aide, ou livrez-la vous-même à une famille près de chez vous.",
+    "needHelp": "J'ai besoin d'aide",
+    "needHelpHint": "Publiez votre demande en moins d'une minute",
+    "canHelp": "Je peux aider",
+    "canHelpHint": "Voir les besoins près de chez vous",
+    "howItWorks": "Comment ça marche",
+    "safetyTitle": "Règles de sécurité",
+    "safetyNoMoney": "Cette plateforme ne demande jamais d'argent. N'envoyez jamais d'argent à qui que ce soit ici.",
+    "safetyMeet": "Vous pouvez choisir un lieu public de rendez-vous au lieu de votre adresse.",
+    "safetyVerify": "Nous ne vérifions pas l'identité des personnes. Restez prudent."
+  },
+  "footer": {
+    "abuse": "Signaler un abus",
+    "privacy": "Confidentialité"
+  }
+}

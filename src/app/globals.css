@@ -1,0 +1,113 @@
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------ *
+ * Design tokens. Light is the base; dark is defined only as overrides.
+ * ------------------------------------------------------------------ */
+:root {
+  --bg: #ffffff;
+  --surface: #f6f7f9;
+  --border: #e2e5ea;
+  --text: #14181f;
+  --text-muted: #5a6472;
+  --brand: #0f6b4f;
+  --brand-contrast: #ffffff;
+  --danger: #b3261e;
+  --danger-surface: #fdeceb;
+  --warning: #8a5300;
+  --focus: #0f6b4f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #10141a;
+    --surface: #171d25;
+    --border: #2a323d;
+    --text: #eef1f5;
+    --text-muted: #9aa5b4;
+    --brand: #3fbf92;
+    --brand-contrast: #06231a;
+    --danger: #ff8a80;
+    --danger-surface: #3a1512;
+    --warning: #f0b400;
+    --focus: #3fbf92;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-brand: var(--brand);
+  --color-brand-contrast: var(--brand-contrast);
+  --color-danger: var(--danger);
+  --color-danger-surface: var(--danger-surface);
+}
+
+/* ------------------------------------------------------------------ *
+ * Base
+ * ------------------------------------------------------------------ */
+html {
+  /* Western Arabic numerals everywhere, including the Arabic UI.
+     Maghreb convention differs from Mashriq — Eastern numerals would
+     read as foreign to Algerian users. */
+  font-variant-numeric: lining-nums;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Arabic needs more vertical breathing room than Latin. */
+html[lang='ar'] body {
+  font-family: 'Noto Sans Arabic', 'Segoe UI', system-ui, sans-serif;
+  line-height: 1.75;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * RTL
+ *
+ * Layout mirroring is handled entirely by CSS logical properties
+ * (Tailwind ms- me- ps- pe- and text-start). Do NOT add direction-
+ * specific overrides here — if something needs [dir="rtl"] to look right,
+ * the component is using a physical property and should be fixed.
+ *
+ * The only legitimate exception is icon mirroring below.
+ * ------------------------------------------------------------------ */
+
+/* Directional icons only (back, next, progress arrows).
+   Never apply to checkmarks, clocks, phone, camera, or logos. */
+[dir='rtl'] .rtl-mirror {
+  transform: scaleX(-1);
+}
+
+/* Phone numbers, quantities, IDs and times inside Arabic text render
+   scrambled without isolation. Use <bdi> or this class. */
+.bidi-isolate {
+  unicode-bidi: isolate;
+}
+
+/* Phone/number inputs stay LTR even inside an RTL form. */
+input[type='tel'],
+input[inputmode='numeric'] {
+  direction: ltr;
+  text-align: start;
+}

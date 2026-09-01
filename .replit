@@ -1,0 +1,23 @@
+modules = ["nodejs-24", "postgresql-16"]
+run = "npm run dev"
+
+[nix]
+channel = "stable-24_11"
+
+# IMPORTANT: deploymentTarget MUST stay "vm" (Reserved VM).
+# On Autoscale, background work is throttled or killed once a response is sent —
+# the claim-lapse sweeper, the 72h expiry job and the 24h "Still needed?" SMS
+# would silently stop running. This is a confirmed failure mode from a prior
+# project on this account. Do not switch this to "autoscale".
+[deployment]
+deploymentTarget = "vm"
+build = ["npm", "run", "build"]
+run = ["npm", "run", "start"]
+
+[[ports]]
+localPort = 3000
+externalPort = 80
+
+[env]
+NEXT_TELEMETRY_DISABLED = "1"
+NODE_ENV = "development"
