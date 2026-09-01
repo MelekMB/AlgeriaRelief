@@ -38,9 +38,9 @@ git push -u origin main
 
 | Secret | Required | Notes |
 |---|---|---|
-| `SESSION_SECRET` | **yes** | 64 hex chars. Generate: `openssl rand -hex 32` |
-| `ADMIN_PASSWORD` | **yes** | Protects `/admin`. Without it, admin is closed entirely. |
-| `ABUSE_EMAIL` | **yes** | Shown publicly as the takedown contact |
+| `SESSION_SECRET` | **yes — the app cannot post without it** | 64 hex chars. Generate: `openssl rand -hex 32`. Used to encrypt addresses and phone numbers at rest and to sign session cookies. |
+| `ADMIN_PASSWORD` | recommended | Unlocks `/admin`: the kill switch, the per-wilaya throttle, and the quarantine queue. Leave it unset and `/admin` is permanently inaccessible — safe, but you lose the emergency stop. |
+| `ABUSE_EMAIL` | recommended | The address shown on `/abuse` for reporting scams and dangerous listings. With no moderators, this is the only way anyone can reach a human. Leave it unset and the page still explains how to report, just without an email. |
 | `SMS_PROVIDER` | no | `none` (default) or `twilio` |
 | `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM` | if twilio | |
 | `ANTHROPIC_API_KEY` | no | Reserved for the LLM screening pass; deterministic rules run without it |
