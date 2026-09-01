@@ -15,7 +15,8 @@
     "seed:geo": "tsx scripts/seed-geo.ts",
     "worker": "tsx scripts/worker.ts",
     "start:web": "next start -H 0.0.0.0",
-    "smoke": "tsx scripts/smoke-test.ts"
+    "smoke": "tsx scripts/smoke-test.ts",
+    "doctor": "tsx scripts/doctor.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.36.4",

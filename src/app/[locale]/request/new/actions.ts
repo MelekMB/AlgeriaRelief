@@ -36,8 +36,16 @@ export async function submitRequest(
   const phone = String(formData.get('phone') ?? '').trim();
 
   // Operator kill switch / per-wilaya throttle. Checked before any work so a
-  // spike can be stopped instantly from the dashboard.
-  if (await writesBlocked()) return { error: 'generic' };
+  // spike can be stopped instantly from the dashboard. A settings-table
+  // failure must never block posting, so this fails open and says why.
+  try {
+    if (await writesBlocked()) {
+      console.warn('[submitRequest] blocked by operator setting (read-only or throttle)');
+      return { error: 'generic' };
+    }
+  } catch (err) {
+    console.error('[submitRequest] settings check failed, continuing anyway:', err);
+  }
 
   if (!categoryCode) return { error: 'category' };
   if (!communeId) return { error: 'commune' };
@@ -102,7 +110,13 @@ export async function submitRequest(
       shadowed: verdict.action === 'shadow',
     });
 
-    if (!created) return { error: 'generic' };
+    if (!created) {
+      console.error(
+        `[submitRequest] createRequest returned null — category "${categoryCode}" not found. ` +
+          'Has `npm run seed:geo` been run against this database?',
+      );
+      return { error: 'generic' };
+    }
     redirect(`/${locale}/request/sent?unverified=1`);
   }
 
