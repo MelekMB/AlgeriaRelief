@@ -12,6 +12,7 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
   setRequestLocale(locale);
 
   const t = await getTranslations('admin');
+  const tl = await getTranslations('ledger');
 
   if (!(await isAdmin())) {
     return (
@@ -40,13 +41,13 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
             <p className="font-mono text-3xl font-bold">
               <bdi>{stats.delivered}</bdi>
             </p>
-            <p className="text-xs text-muted">delivered</p>
+            <p className="text-xs text-muted">{tl('delivered')}</p>
           </div>
           <div className="flex-1 rounded-xl border border-border bg-surface p-4 text-center">
             <p className="font-mono text-3xl font-bold">
               <bdi>{stats.open}</bdi>
             </p>
-            <p className="text-xs text-muted">open</p>
+            <p className="text-xs text-muted">{tl('open')}</p>
           </div>
         </div>
       </section>
