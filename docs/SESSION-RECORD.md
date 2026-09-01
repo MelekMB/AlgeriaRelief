@@ -415,3 +415,18 @@ Checks run before touching anything:
 - **Public-repo secret audit** before pushing: `git ls-files` matched only `.env.example` (empty placeholders); confirmed `.env.local` is ignored via `.gitignore:11:.env*.local`; grepped committed files for assigned values of `SESSION_SECRET`, `ADMIN_PASSWORD`, `TWILIO_AUTH_TOKEN`, `ANTHROPIC_API_KEY` — no matches. Safe to publish.
 
 Pushed `main` (5 commits, 77 files). Verified with `git fetch` + `git status -sb` showing `## main...origin/main` with no divergence. Next step for the user is the Replit import.
+
+**Chunk 42 — Request form failing with the generic error; added diagnostics.** Omar sent a screenshot of `/ar/request/new` filled in (ماء وطعام · بجاية · أميزور · "family of 6" · التسليم في منزلي · "W clark st 1002") showing **حدث خطأ. حاول مرة أخرى.** — i.e. `formErrors.generic`.
+
+Traced the two code paths that can return that string, and deliberately did **not** guess at the cause:
+1. `writesBlocked()` at the top of `submitRequest` (operator kill switch / wilaya throttle).
+2. `createRequest` returning `null`, which happens only when the category-code lookup finds no row.
+
+Reasoned from the screenshot that the commune dropdown showing أميزور means wilayas and communes are seeded and the DB is reachable — which makes an empty `categories` table odd, since `seed:geo` seeds wilayas → categories → communes in that order. Because the evidence was ambiguous, chose instrumentation over speculation.
+
+Changes:
+- **The settings check now fails open.** Wrapped in try/catch: a settings-table problem logs and continues rather than blocking posting. A glitch in operator settings must never remove people's ability to ask for help.
+- **Real server-side logging** on both generic paths, prefixed `[submitRequest]`, including an explicit hint that a null `createRequest` means `seed:geo` may not have run.
+- **`npm run doctor`** (`scripts/doctor.ts`) — checks required/optional env vars (including that `SESSION_SECRET` is ≥32 chars), the database connection, the presence of all 14 tables, seed row counts for wilayas/categories/communes, **the exact `where code = 'water_food'` lookup the form performs**, and whether read-only mode is on or wilayas are throttled. Each failure prints the command that fixes it. Verified it runs and reports correctly with no env configured.
+
+Build green, committed and pushed as `0e3b257`. Gave Omar the shell sequence: `git pull && npm install && npm run doctor`, then `npm run seed:geo && npm run doctor` if seed data is missing, then `npm run smoke`.
