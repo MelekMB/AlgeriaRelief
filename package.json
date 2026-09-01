@@ -6,13 +6,16 @@
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",
-    "start": "next start -H 0.0.0.0",
+    "start": "sh -c \"npm run worker & next start -H 0.0.0.0\"",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "tsx scripts/dev/selftest.ts && tsx scripts/dev/screening.test.ts",
+    "test": "tsx scripts/dev/selftest.ts && tsx scripts/dev/screening.test.ts && tsx scripts/dev/messages.test.ts",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "seed:geo": "tsx scripts/seed-geo.ts"
+    "seed:geo": "tsx scripts/seed-geo.ts",
+    "worker": "tsx scripts/worker.ts",
+    "start:web": "next start -H 0.0.0.0",
+    "smoke": "tsx scripts/smoke-test.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.36.4",
@@ -20,7 +23,8 @@
     "next-intl": "^3.26.3",
     "postgres": "^3.4.5",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "tsx": "^4.19.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",
@@ -29,7 +33,6 @@
     "@types/react-dom": "^19.0.3",
     "drizzle-kit": "^0.28.1",
     "tailwindcss": "^4.0.0",
-    "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   }
 }

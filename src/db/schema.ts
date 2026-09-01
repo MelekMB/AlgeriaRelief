@@ -286,3 +286,15 @@ export const auditLog = pgTable('audit_log', {
   metadata: text('metadata'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+/* ------------------------------------------------------------------ */
+/* Runtime settings — kill switch and per-wilaya throttle.             */
+/* Stored in the database so the operator can change them from the     */
+/* dashboard without a redeploy, which matters at 3am.                 */
+/* ------------------------------------------------------------------ */
+
+export const settings = pgTable('settings', {
+  key: varchar('key', { length: 64 }).primaryKey(),
+  value: text('value').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});

@@ -134,8 +134,9 @@ export function normaliseForDedupe(text: string): string {
 export function dedupeFingerprint(parts: {
   body: string;
   communeId: number;
-  categoryId: number;
+  /** Category code or id — whichever the caller has. Must be consistent. */
+  categoryKey: string | number;
 }): string {
-  const basis = `${parts.communeId}:${parts.categoryId}:${normaliseForDedupe(parts.body)}`;
+  const basis = `${parts.communeId}:${parts.categoryKey}:${normaliseForDedupe(parts.body)}`;
   return createHash('sha256').update(basis).digest('hex').slice(0, 32);
 }

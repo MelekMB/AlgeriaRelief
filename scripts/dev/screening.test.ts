@@ -50,11 +50,11 @@ expectAction('darija/arabizi', '3ndna 3ailat kbira, n7tajou lma w khobz', 'allow
 expectAction('price mention is fine', 'كل شيء احترق، حتى 5000 دج ديال الأدوية', 'allow');
 
 /* --- Dedupe --- */
-const a = dedupeFingerprint({ body: 'نحتاج ماءً وأغطية!', communeId: 3, categoryId: 1 });
-const b = dedupeFingerprint({ body: 'نحتاج ماء و أغطية', communeId: 3, categoryId: 1 });
+const a = dedupeFingerprint({ body: 'نحتاج ماءً وأغطية!', communeId: 3, categoryKey: 'water_food' });
+const b = dedupeFingerprint({ body: 'نحتاج ماء و أغطية', communeId: 3, categoryKey: 'water_food' });
 check('dedupe: punctuation/diacritics ignored', a === b, `${a.slice(0, 8)} vs ${b.slice(0, 8)}`);
 
-const c = dedupeFingerprint({ body: 'نحتاج ماء وأغطية', communeId: 4, categoryId: 1 });
+const c = dedupeFingerprint({ body: 'نحتاج ماء وأغطية', communeId: 4, categoryKey: 'water_food' });
 check('dedupe: different commune differs', a !== c);
 
 check(

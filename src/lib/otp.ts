@@ -1,7 +1,8 @@
 import { and, desc, eq, gt, isNull, sql } from 'drizzle-orm';
 import { db } from '@/db';
-import { people, otpCodes } from '@/db/schema';
-import { encrypt, hashToken, numericCode, safeEqual } from './crypto';
+import { otpCodes } from '@/db/schema';
+import { hashToken, numericCode, safeEqual } from './crypto';
+import { upsertPerson } from './people';
 import { parseAlgerianMobile } from './phone';
 import { isDevEchoMode, sendSms } from './sms';
 
@@ -109,36 +110,6 @@ export async function verifyOtp(phoneInput: string, code: string): Promise<Verif
 
   await db.update(otpCodes).set({ consumedAt: new Date() }).where(eq(otpCodes.id, row.id));
 
-  const personId = await upsertVerifiedPerson(parsed.e164, phoneHash);
+  const personId = await upsertPerson(parsed.e164, { verified: true });
   return { ok: true, personId };
-}
-
-async function upsertVerifiedPerson(e164: string, phoneHash: string): Promise<number> {
-  const now = new Date();
-
-  const [existing] = await db
-    .select({ id: people.id })
-    .from(people)
-    .where(eq(people.phoneHash, phoneHash))
-    .limit(1);
-
-  if (existing) {
-    await db
-      .update(people)
-      .set({ phoneVerifiedAt: now, lastSeenAt: now })
-      .where(eq(people.id, existing.id));
-    return existing.id;
-  }
-
-  const [created] = await db
-    .insert(people)
-    .values({
-      phoneE164: encrypt(e164),
-      phoneHash,
-      phoneVerifiedAt: now,
-      lastSeenAt: now,
-    })
-    .returning({ id: people.id });
-
-  return created!.id;
 }

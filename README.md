@@ -1,97 +1,129 @@
 # Algeria Wildfire Relief
 
-Crisis-response web app connecting people who need help with donors who **deliver directly** to them. Arabic + French, mobile-first, built to run with no moderation staff.
+A crisis web app that connects people who need help with donors who **deliver directly** to them. Arabic + French, mobile-first, built to run with no moderation staff.
 
-Full product plan: `C:\Users\melek\Downloads\SOP-SNAP\01-Documents\Algeria-Wildfire-Relief-Product-Plan.md`
-
----
-
-## ⚠️ Two things that must not be changed casually
-
-**1. Deployment target must stay Reserved VM.**
-`.replit` sets `deploymentTarget = "vm"`. On Autoscale, work that continues after a response is sent gets throttled or killed — a failure mode already confirmed on this account. The claim-lapse sweeper, the 72h expiry job and the 24h "Still needed?" SMS all depend on background execution and would silently stop running. The app would look fine and quietly rot.
-
-**2. Emergency numbers are unverified.**
-`src/config/emergency.ts` ships working defaults with `EMERGENCY_VERIFIED = false`. Confirm every number against an authoritative Algerian source before launch. A wrong number in an emergency app is the worst bug this codebase can ship.
+- Product plan: `docs/PRODUCT-PLAN.md`
+- Working log: `docs/SESSION-RECORD.md`
 
 ---
 
-## Running on Replit
+## ⚠️ Three things to settle before real users arrive
 
-1. Import this repo into Replit.
-2. Add the **PostgreSQL** module — `DATABASE_URL` is then provided automatically.
-3. Add Secrets from `.env.example` (at minimum `SESSION_SECRET`, `ADMIN_PASSWORD`, `ABUSE_EMAIL`).
-4. `npm install`
-5. `npm run db:push` — creates the schema
-6. `npm run seed:geo` — seeds wilayas, communes and categories
-7. Run. Deploy as **Reserved VM**.
+**1. Verify the emergency numbers.**
+`src/config/emergency.ts` ships working defaults with `EMERGENCY_VERIFIED = false`. Confirm all four against an authoritative Algerian source, then set the flag to `true`. A wrong number in an emergency app is the worst bug this codebase can ship.
 
-## Running locally
+**2. Deployment target must be Reserved VM, not Autoscale.**
+`.replit` sets `deploymentTarget = "vm"`. The maintenance worker runs as a second process alongside the web server; on Autoscale it is throttled or killed. Claims would never lapse, dead requests would never expire, and the board would rot while looking healthy.
+
+**3. Test SMS delivery to a real `+213` number.**
+Set `SMS_PROVIDER=twilio` with credentials and send yourself a code. If delivery fails, the app still works — unverified posts are published but ranked below verified ones and cannot claim or reveal anyone's contact details — but you should know which mode you are launching in.
+
+---
+
+## Deploying to Replit via GitHub
+
+**1. Push this repo to GitHub**
 
 ```bash
-npm install
-npm run dev
+git remote add origin https://github.com/<you>/algeria-relief.git
+git branch -M main
+git push -u origin main
 ```
 
-Open http://localhost:3000 — it redirects to `/ar` (Arabic is the default locale; French is at `/fr`).
+**2. On Replit:** Create Repl → **Import from GitHub** → pick the repo.
+
+**3. Add the PostgreSQL module** (Tools → Database). `DATABASE_URL` is then injected automatically.
+
+**4. Add Secrets** (Tools → Secrets):
+
+| Secret | Required | Notes |
+|---|---|---|
+| `SESSION_SECRET` | **yes** | 64 hex chars. Generate: `openssl rand -hex 32` |
+| `ADMIN_PASSWORD` | **yes** | Protects `/admin`. Without it, admin is closed entirely. |
+| `ABUSE_EMAIL` | **yes** | Shown publicly as the takedown contact |
+| `SMS_PROVIDER` | no | `none` (default) or `twilio` |
+| `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM` | if twilio | |
+| `ANTHROPIC_API_KEY` | no | Reserved for the LLM screening pass; deterministic rules run without it |
+| `CLAIM_WINDOW_HOURS` | no | Default 6. Tune from pilot data. |
+| `REQUEST_TTL_HOURS` | no | Default 72 |
+
+**5. First-run setup** in the Replit shell:
+
+```bash
+npm install && npm run db:push && npm run seed:geo && npm run smoke
+```
+
+`npm run smoke` is the important one — it exercises the claim lock, the address-reveal boundary, delivery confirmation and the lapse sweeper against the real database, then deletes its own test rows. **Do not launch if it does not print `ALL PASS`.**
+
+**6. Deploy** → Reserved VM. The run command starts the worker and the web server together.
+
+---
 
 ## Scripts
 
 | Script | Purpose |
 |---|---|
-| `npm run dev` | Dev server, bound to 0.0.0.0 for Replit's proxy |
-| `npm run build` / `npm start` | Production build and serve |
+| `npm run dev` | Dev server on 0.0.0.0 |
+| `npm run build` | Production build |
+| `npm start` | Worker + web server (production) |
+| `npm run start:web` | Web server only (use on Windows) |
+| `npm run worker` | Maintenance loop only |
+| `npm test` | Phone/crypto, screening, and locale-parity suites |
 | `npm run typecheck` | `tsc --noEmit` |
-| `npm run db:push` | Push the Drizzle schema to Postgres |
+| `npm run db:push` | Push schema to Postgres |
 | `npm run seed:geo` | Seed wilayas / communes / categories |
+| `npm run smoke` | End-to-end test against the real database |
+
+---
+
+## How it works
+
+**Requester:** two-door home → category → wilaya/commune → description → deliver to home or meet at a landmark → phone → OTP → published for 72h. Manage or close it at `/my-request`.
+
+**Donor:** browse without login → **"I'll deliver this"** → OTP → the request locks to them for 6h and disappears from everyone else's list → address and phone revealed → drive → the receiver reads a **4-digit code** at the door to confirm.
+
+**The claim lock is the point.** Without it everyone opens the app, sees the same top request, and five cars arrive at one house while four other families get nobody — worse than the WhatsApp groups this replaces.
+
+**Moderation runs itself.** Flags are weighted by reporter trust, so a brigade of fresh numbers cannot bury a real request. Three weighted points auto-quarantines. Trusted users (verified + 2 confirmed exchanges + clean record) can review. If nobody reviews, the item stays hidden and expires — silence never publishes.
+
+**The operator has one job:** watch the abuse inbox, and pull the kill switch at `/admin` if things go wrong.
 
 ---
 
 ## Architecture notes
 
-- **Next.js 15 App Router**, server-rendered so the list is readable before any JS executes. Target: under 100KB first meaningful paint.
-- **next-intl** with route-based locales (`/ar`, `/fr`). Every URL is unambiguous and shareable into WhatsApp/Facebook — that share loop is the growth plan.
-- **RTL is handled by CSS logical properties only.** If a component needs a `[dir="rtl"]` override to look right, it is using a physical property and should be fixed instead. The single legitimate exception is `.rtl-mirror` for directional icons.
-- **Western Arabic numerals (0-9) in both locales.** Maghreb convention differs from the Mashriq; Eastern Arabic numerals read as foreign to Algerian users.
-- **Drizzle + postgres-js**, small pool since Reserved VM is one long-lived process.
-- **No Supabase, so no Row Level Security.** Address and phone reveal must be enforced in one server-side accessor that every read path goes through. No component may touch the raw column directly.
+- **Next.js 15 App Router**, server-rendered so the list is readable before any JS executes.
+- **next-intl**, route-based locales (`/ar`, `/fr`). Every URL is shareable into WhatsApp/Facebook — that share loop is the growth plan.
+- **RTL via CSS logical properties only.** If a component needs a `[dir="rtl"]` override, it is using a physical property and should be fixed. The one exception is `.rtl-mirror` for directional icons.
+- **Western Arabic numerals (0-9) in both locales** — Maghreb convention, not Mashriq.
+- **Drizzle + postgres-js**, small pool because Reserved VM is one long-lived process.
+- **The worker is a separate process**, not a Next.js instrumentation hook — that hook is also compiled for the edge runtime, which cannot load the Postgres driver.
 
 ## Security invariants
 
-These are load-bearing. Breaking one breaks the trust model:
+Breaking any one of these breaks the trust model:
 
-- **No money anywhere.** No payment fields, no donation collection, and submissions containing IBAN/RIB/RIP/CCP/BaridiMob/crypto/payment-domain patterns are rejected at submit. This is what removes the fraud incentive.
-- **Address and phone are never public** — not in a list, not in search, not in an API response. Revealed only to one phone-verified donor holding an active claim, and logged.
-- **The claim lock is the anti-waste mechanic.** One open trip per donor; claiming reserves a request for 6h and hides it from everyone else; lapse auto-returns it to the pool.
-- **Serial claiming is the main attack** (harvesting addresses without ever delivering). No-show tracking throttles then suspends.
-- **Everything fails closed.** Quarantined content stays hidden if nobody reviews it, and expires. Silence never publishes.
-- **Strip EXIF from every uploaded photo.** A geotagged photo of a damaged home defeats the whole location-privacy design.
+- **No money anywhere.** No payment fields, and submissions containing IBAN/RIB/RIP/CCP/BaridiMob/Western Union/crypto/payment-domain patterns or AR/FR money solicitation are rejected at submit. Removing the payment rail is what removes the fraud incentive.
+- **Address and phone are never public.** Not in a list, not in search, not in an API response. `src/lib/requests.ts` is the security boundary: `getRequestForClaimant` is the only place they are decrypted. Never add those columns to a list projection.
+- **One open trip per donor**, and serial claiming without delivering increments `noShowCount` — that is the defence against harvesting addresses.
+- **Everything fails closed.** Quarantined content stays hidden if nobody reviews it.
+- **Strip EXIF from any photo upload** (not yet built — see below).
 
 ---
 
 ## Status
 
-**Built and verified** (`npm run typecheck`, `npm test`, `npm run build` all green)
-- Project scaffold, Replit config (Reserved VM), Tailwind v4 design tokens with light/dark
-- AR/FR routing with `dir`/`lang` per locale — confirmed in the prerendered HTML
-- Full database schema (people, OTP, requests with claim-lock fields, trips, flags, reviews, trust events, audit log)
-- Home page: two doors, emergency banner, safety rules, language toggle
-- Seed data: 58 wilayas, 8 categories, ~130 communes across the 8 fire-prone wilayas
-- Crypto layer: AES-256-GCM for phone/address at rest, HMAC-signed session cookies, peppered hashing, lazy key derivation so a fresh import builds before secrets exist
-- Algerian mobile parsing — handles `0555…`, `+213…`, `00213…`, bare `5…`, and the country-code-plus-trunk-zero shape people actually type; rejects landlines and foreign numbers
-- Phone OTP: 6-digit codes, hashed at rest, 10-min TTL, 5 attempts, 1/min and 5/hour caps
-- SMS adapter with Twilio + no-provider dev mode (never echoes codes in production)
-- **Screening**: payment-rail blocklist (IBAN, RIB/RIP, CCP, BaridiMob, Western Union, crypto, payment domains, AR/FR money solicitation incl. Arabic-Indic digits), contact-leak shadowing, and dedupe fingerprinting robust to diacritics, accents and attached/detached Arabic conjunctions
+**Working and verified** — `npm run typecheck`, `npm test` (3 suites), `npm run build` all green; AR RTL and FR LTR confirmed in a real browser and in the prerendered HTML.
 
-**Not yet exercised against a live database.** The seed script, OTP and person upsert are written and typecheck clean, but nothing has run against Postgres — there is no local instance. First real test is on Replit after `db:push` + `seed:geo`.
+Post a request · phone OTP · donor sign-in · browse with filters · request detail · **claim lock** · batch nearby · gated address reveal · tap-to-call and WhatsApp · 4-digit delivery confirmation · close/renew your own request · flag → auto-quarantine · admin dashboard with kill switch and per-wilaya throttle · public delivery ledger · privacy and abuse pages · maintenance worker (claim lapse, expiry, "still needed?" ping) · locale parity gate.
 
-**Next, in order**
-1. Post a request — 5 fields, delivery point (home vs landmark), under 60 seconds
-2. Browse needs — distance-first, filters, no login
-3. **Claim lock** — reserve 6h, reveal address, countdown, auto-return on lapse
-4. Batch nearby, then 4-digit delivery confirmation
-5. LLM screening pass (Haiku) layered on top of the deterministic rules
-6. Flags → auto-quarantine, community review queue
-7. Background jobs: claim-lapse sweeper, expiry, "Still needed?" SMS
-8. Operator dashboard: quarantine, counters, per-wilaya throttle, kill switch
-9. SMS deliverability test to a real `+213` number — **do this before step 3 ships**
+**Not yet run against a live database.** No local Postgres was available. `npm run smoke` exists precisely to close that gap in one command on Replit — run it before launch.
+
+**Not built yet**
+1. LLM screening pass (Haiku) on top of the deterministic rules
+2. Photo upload with EXIF stripping
+3. Per-commune "Needed now / Saturated" board
+4. Community review queue UI (the logic in `src/lib/flags.ts` is written and tested by type only; admin can already keep/remove)
+5. Contact-reveal daily quotas
+6. Honeypot listings
+7. Full commune dataset — `src/data/communes.ts` covers 8 fire-prone wilayas only; import the rest with `npm run seed:geo -- --file communes.json`
