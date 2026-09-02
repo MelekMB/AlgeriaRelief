@@ -480,3 +480,13 @@ Sequence of environment problems solved to get here, none of them application bu
 Updated the README Status section, which still wrongly claimed the app had never run against a live database, and added an "If the Replit build fails" section documenting all three environment traps for future reference.
 
 Remaining before launch: switch the deployment from **Autoscale** to **Reserved VM** in Publishing -> Adjust settings, republish, then the two things only Omar can do — verify the four emergency numbers and have a native Algerian speaker read the Arabic strings.
+
+**Chunk 47 — Empty commune dropdown: the workspace app was not running.** Omar reported being unable to select a town — the البلدية dropdown contained only the "اختر البلدية" placeholder, and the browser's native validation blocked submission with "Please select an item in the list."
+
+Diagnosed rather than guessed. `npm run doctor` had already proven the database holds 120 communes, so the fault had to be in the request, not the data. Asked him to hit the API directly from the Shell: `curl -s "http://localhost:3000/api/communes?wilaya=06"` returned **completely empty output** — not `{"communes":[]}`, but nothing at all, meaning no server was listening.
+
+Cause: `npm run build` compiles but does not start anything, so nothing was running in the workspace. The form he was testing was the **published deployment from ~22 hours earlier**, built from the pre-fix code. Told him to press Run, then retry with `${PORT:-3000}`.
+
+Second attempt returned the real payload: `{"communes":[{"id":12,"nameAr":"أدكار","nameFr":"Adekar"},{"id":2,...,"nameFr":"Akbou"},{"id":10,...,"nameFr":"Amizour"},{"id":5,...,"nameFr":"Aokas"},{"id":11,...,"nameFr":"Barbacha"},...` — the API, the database and the workspace app are all working correctly.
+
+Reinforced the distinction he had been tripping over: the **workspace app** and the **published app** are two separate things. Every fix from today lives in the workspace; the live URL keeps serving the old broken build until it is republished, and it must be switched from Autoscale to Reserved VM first.
