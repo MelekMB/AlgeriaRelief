@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
+import ClearDraft from '@/components/ClearDraft';
 
 export default async function SentPage({
   params,
@@ -17,6 +18,7 @@ export default async function SentPage({
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-10">
+      <ClearDraft />
       <h1 className="text-2xl font-bold text-brand">{t('title')}</h1>
       <p className="text-base">{t('body')}</p>
       <p className="text-sm text-muted">{t('expires')}</p>

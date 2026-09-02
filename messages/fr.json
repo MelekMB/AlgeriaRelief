@@ -191,7 +191,8 @@
     "renew": "J'ai toujours besoin",
     "renewHint": "Prolonge la demande de 72 heures.",
     "closed": "Demande fermée. Merci.",
-    "renewed": "Demande prolongée."
+    "renewed": "Demande prolongée.",
+    "signOut": "Se déconnecter de cet appareil"
   },
   "flag": {
     "button": "Signaler cette demande",

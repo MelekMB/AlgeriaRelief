@@ -4,6 +4,7 @@ import { Link } from '@/i18n/routing';
 import { getOwnConfirmCode, getOwnRequest } from '@/lib/requests';
 import { getSession } from '@/lib/session';
 import ManageRequestForm from '@/components/ManageRequestForm';
+import { signOutAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -87,6 +88,13 @@ export default async function MyRequestPage({
       )}
 
       <ManageRequestForm locale={locale} requestId={own.id} />
+
+      <form action={signOutAction}>
+        <input type="hidden" name="locale" value={locale} />
+        <button type="submit" className="min-h-12 text-sm text-muted underline">
+          {t('signOut')}
+        </button>
+      </form>
     </main>
   );
 }

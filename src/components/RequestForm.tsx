@@ -7,7 +7,13 @@ import { submitRequest, type SubmitState } from '@/app/[locale]/request/new/acti
 type Option = { code: string; label: string };
 type Commune = { id: number; nameAr: string; nameFr: string };
 
-const DRAFT_KEY = 'ar_request_draft_v1';
+const DRAFT_KEY = 'ar_request_draft_v2';
+
+// A half-written form is worth restoring after a dropped connection, which is
+// normal on a mountain 3G link. It is NOT worth keeping around afterwards:
+// phones get shared and borrowed, so a stale form should not greet the next
+// person who opens the app.
+const DRAFT_MAX_AGE_MS = 30 * 60 * 1000;
 
 export default function RequestForm({
   locale,
@@ -38,13 +44,17 @@ export default function RequestForm({
   const [landmarkHint, setLandmarkHint] = useState('');
   const [showMore, setShowMore] = useState(false);
 
-  // A dropped connection mid-form is normal here, not an edge case. Everything
-  // except the phone number is kept locally so nothing is retyped.
   useEffect(() => {
     try {
       const saved = localStorage.getItem(DRAFT_KEY);
       if (!saved) return;
       const d = JSON.parse(saved);
+
+      // Anything older than the window is discarded rather than restored.
+      if (!d.savedAt || Date.now() - d.savedAt > DRAFT_MAX_AGE_MS) {
+        localStorage.removeItem(DRAFT_KEY);
+        return;
+      }
       setCategoryCode(d.categoryCode ?? '');
       setWilayaCode(d.wilayaCode ?? '');
       setCommuneId(d.communeId ?? '');
@@ -52,8 +62,8 @@ export default function RequestForm({
       setUrgency(d.urgency ?? 'normal');
       setBeneficiary(d.beneficiary ?? 'self');
       setDeliveryPoint(d.deliveryPoint ?? 'landmark');
-      setAddress(d.address ?? '');
       setLandmarkHint(d.landmarkHint ?? '');
+      // The home address is deliberately never restored - see below.
     } catch {
       /* storage unavailable (private window, blocked cookies) — ignore */
     }
@@ -64,6 +74,7 @@ export default function RequestForm({
       localStorage.setItem(
         DRAFT_KEY,
         JSON.stringify({
+          savedAt: Date.now(),
           categoryCode,
           wilayaCode,
           communeId,
@@ -71,14 +82,17 @@ export default function RequestForm({
           urgency,
           beneficiary,
           deliveryPoint,
-          address,
           landmarkHint,
+          // The home address is never written to the browser. It is the most
+          // sensitive field in the app and the one thing the whole design
+          // works to keep private; leaving it in localStorage on a shared or
+          // borrowed phone would undo that.
         }),
       );
     } catch {
       /* ignore */
     }
-  }, [categoryCode, wilayaCode, communeId, body, urgency, beneficiary, deliveryPoint, address, landmarkHint]);
+  }, [categoryCode, wilayaCode, communeId, body, urgency, beneficiary, deliveryPoint, landmarkHint]);
 
   useEffect(() => {
     if (!wilayaCode) {
