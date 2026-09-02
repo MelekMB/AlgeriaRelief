@@ -490,3 +490,17 @@ Cause: `npm run build` compiles but does not start anything, so nothing was runn
 Second attempt returned the real payload: `{"communes":[{"id":12,"nameAr":"أدكار","nameFr":"Adekar"},{"id":2,...,"nameFr":"Akbou"},{"id":10,...,"nameFr":"Amizour"},{"id":5,...,"nameFr":"Aokas"},{"id":11,...,"nameFr":"Barbacha"},...` — the API, the database and the workspace app are all working correctly.
 
 Reinforced the distinction he had been tripping over: the **workspace app** and the **published app** are two separate things. Every fix from today lives in the workspace; the live URL keeps serving the old broken build until it is republished, and it must be switched from Autoscale to Reserved VM first.
+
+**Chunk 48 — Published app had an empty database; made the app self-seed.** Omar gave the live URL `https://algeria-relief.replit.app`. Opened it directly rather than asking more questions: `GET /api/communes?wilaya=06` returned **`{"communes":[]}`** — a valid response with no rows. Since the JSON parsed rather than erroring, the tables exist on that database; only the seed data was missing. Conclusion: **the Replit deployment uses a different database from the workspace.**
+
+Replit's own "Adjust settings" screen then confirmed it — a *Production database* section with an unchecked box, "Copy your development database to production database".
+
+Deliberately advised **against** ticking that box. It is a persistent publish-time behaviour that replaces production data with development data; harmless while production is empty, but after launch a routine republish would wipe real families' requests.
+
+Safer fix implemented instead: `scripts/start.mjs`, wired as `"start": "node scripts/start.mjs"`. It forces `NODE_ENV=production`, runs `seed:geo` (idempotent upsert on stable codes) so a deployment populates its own database on every boot, launches the maintenance worker in the background, then runs the web server in the foreground and kills the worker when it exits. A failed seed logs a warning and continues — serving a degraded app beats serving nothing during a fire.
+
+**Push was rejected**: Replit had pushed two `Published your App` commits to GitHub on its own, trimming `package-lock.json` by 115 lines. Checked before integrating that `tsx` (needed in production to run the worker and seeder) survived — it did, 25 references intact — then rebased on top and pushed cleanly.
+
+Also confirmed from the screenshots that `SESSION_SECRET` is present in the production app secrets, alongside Replit's own `DATABASE_URL`/`PG*` variables.
+
+Remaining: set the deployment machine type to Reserved VM (the control sits above the visible area of Adjust settings), publish, and verify the live `/api/communes?wilaya=06` returns towns.
