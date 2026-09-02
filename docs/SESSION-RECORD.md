@@ -504,3 +504,15 @@ Safer fix implemented instead: `scripts/start.mjs`, wired as `"start": "node scr
 Also confirmed from the screenshots that `SESSION_SECRET` is present in the production app secrets, alongside Replit's own `DATABASE_URL`/`PG*` variables.
 
 Remaining: set the deployment machine type to Reserved VM (the control sits above the visible area of Adjust settings), publish, and verify the live `/api/communes?wilaya=06` returns towns.
+
+**Chunk 49 — Deployment logs exposed two real production bugs, one of them mine.** Omar sent the Replit deploy logs. They showed the container being killed in a loop and a Postgres error repeating every ~15 seconds.
+
+**Bug 1 (mine): `ORDER BY position 0 is not in select list` (code 42P10).** In `listOpenRequests` the proximity sort term was written as a ternary that fell back to a bare ``sql`0` `` when no commune filter was set. That is not a no-op: Postgres reads a plain integer in ORDER BY as an **ordinal column position**, so position 0 is invalid and **every needs-list query failed**. The local build and the smoke test never caught it because neither exercises an unfiltered listing. Fixed by building the ORDER BY list conditionally and omitting the proximity term entirely when there is no commune filter, with a comment explaining the trap.
+
+**Bug 2: the deployment health check was failing.** Logs showed `healthcheck failed ... returned status 500`, then `Get "http://127.0.0.1:1104/": context deadline exceeded`, then `system: received signal terminated`. Replit probes a port **it** chooses (1104 here) while the app was hardcoded to 3000, so nothing answered. Compounding it, my `scripts/start.mjs` ran `seed:geo` *before* starting the web server, so even on the right port the first response could arrive too late. Rewritten: the web server starts **first**, bound to `process.env.PORT`, and seeding plus the maintenance worker are moved to a background timer with SIGTERM/SIGINT handling. Nothing may delay the first response.
+
+The logs also revealed the deployment was still running the **old** start command (`sh -c "npm run worker & next start -H 0.0.0.0"`), confirming it had published from a commit before `start.mjs` existed.
+
+Build verified green (26 pages) and pushed as `03decbb`.
+
+**Git divergence, again.** Replit had made its own local `Published your App` commits, so `git pull` refused with "You have divergent branches". Resolved with `git fetch origin && git reset --hard origin/main` — GitHub is the source of truth and Replit's publish commits carry nothing of ours. Told Omar this will recur after every publish and that the same one-liner is the routine fix.
