@@ -107,19 +107,25 @@ export async function listOpenRequests(filters: ListFilters = {}) {
   if (filters.communeId) conditions.push(eq(requests.communeId, filters.communeId));
   if (filters.categoryCode) conditions.push(eq(categories.code, filters.categoryCode));
 
+  // Proximity first when a commune is in play, then urgency, then verified
+  // above unverified, then oldest unmet first so quiet requesters do not
+  // starve behind a stream of new posts.
+  //
+  // The proximity term is omitted entirely when there is no commune filter.
+  // A bare `sql`0`` here is NOT a no-op: Postgres reads a plain integer in
+  // ORDER BY as an ordinal column position, so it fails with
+  // "ORDER BY position 0 is not in select list".
+  const order = [];
+  if (filters.communeId) {
+    order.push(sql`case when ${requests.communeId} = ${filters.communeId} then 0 else 1 end`);
+  }
+  order.push(sql`case ${requests.urgency} when 'critical' then 0 when 'high' then 1 else 2 end`);
+  order.push(desc(sql`${people.phoneVerifiedAt} is not null`));
+  order.push(asc(requests.createdAt));
+
   return baseJoins()
     .where(and(...conditions))
-    .orderBy(
-      // Proximity first when a commune is in play, then urgency, then
-      // verified above unverified, then oldest unmet first so quiet
-      // requesters do not starve behind a stream of new posts.
-      filters.communeId
-        ? sql`case when ${requests.communeId} = ${filters.communeId} then 0 else 1 end`
-        : sql`0`,
-      sql`case ${requests.urgency} when 'critical' then 0 when 'high' then 1 else 2 end`,
-      desc(sql`${people.phoneVerifiedAt} is not null`),
-      asc(requests.createdAt),
-    )
+    .orderBy(...order)
     .limit(Math.min(filters.limit ?? 50, 100));
 }
 
