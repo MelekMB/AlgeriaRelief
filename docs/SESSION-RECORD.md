@@ -442,3 +442,21 @@ Conclusion: the Agent's unprompted rewrite, not the secret, is the likely cause 
 **Standing instruction given to the user: do not use the Replit Agent on this repo.** It edits files unprompted and will keep re-diverging from GitHub. Shell for commands, Preview to look at the app, code changes via GitHub only.
 
 Omar then said he did not understand and asked plainly what to do, so the whole recovery was reduced to a single copy-paste command chain.
+
+**Chunk 44 — Recovery worked; first successful run against a real database.** Omar ran the single recovery command. `git reset --hard origin/main` landed on `8a45874`, and `git clean -fd` removed the Replit Agent's leftovers: `.agents/`, `.migration-backup/`, `artifacts/mockup-sandbox/src/`. `npm install` (80 packages), `db:push` applied the schema, and `seed:geo` loaded **58 wilayas, 8 categories, 120 communes**.
+
+`npm run doctor` — **all checks passed**: DATABASE_URL and SESSION_SECRET set (ADMIN_PASSWORD and ABUSE_EMAIL warned as optional, as designed); connection ok; all **14 tables** present; seed counts correct; the exact `where code = 'water_food'` lookup the form performs resolves; read-only mode off.
+
+`npm run smoke` — **ALL PASS**, the first time any of this code has executed against a live Postgres. Every assertion held:
+- address hidden before any claim
+- donor A claims successfully; **donor B refused — the claim lock holds under contention**
+- requester cannot claim their own request
+- donor A sees address, phone and a 4-digit code; **donor B denied the address**
+- wrong confirmation code rejected; correct code confirms delivery; request marked delivered; donor's delivery counter incremented
+- sweeper released an artificially lapsed claim, returned the request to the pool, cleared the claim, **recorded a no-show against the donor**, and the request became listable again
+
+Also visible in the output: the `[sms:none] → +213500000001: 0324` lines, confirming the no-provider dev mode prints codes to the console rather than sending SMS.
+
+`cat .replit` confirmed **`deploymentTarget = "vm"` survived** — the Agent's 2-line edit to that file was reverted by the reset, so the maintenance worker will not be killed on deploy.
+
+Root cause of the original "حدث خطأ" is now settled: it was the Replit Agent's unprompted rewrite of the repo, not application code. The app itself was correct.
