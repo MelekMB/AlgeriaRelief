@@ -1,5 +1,11 @@
 /**
- * PILOT COMMUNE DATA — INCOMPLETE BY DESIGN.
+ * FALLBACK COMMUNE DATA ONLY.
+ *
+ * The real dataset is `data/communes.json` at the repo root: 1,545 communes
+ * covering all 58 wilayas, with official commune codes and Arabic names.
+ * `npm run seed:geo` loads that by default. This file is used only if that
+ * JSON is missing, so a broken deploy degrades to 8 wilayas rather than to an
+ * app nobody can post on.
  *
  * Algeria has ~1,540 communes. This file covers the eight fire-prone wilayas
  * only, and within those it lists the main communes rather than all of them.

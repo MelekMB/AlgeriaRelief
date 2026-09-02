@@ -18,15 +18,31 @@ import { WILAYAS } from '../src/data/wilayas.js';
 import { COMMUNES, type SeedCommune } from '../src/data/communes.js';
 import { CATEGORIES } from '../src/data/categories.js';
 
+const DEFAULT_DATASET = 'data/communes.json';
+
 async function loadCommunes(): Promise<SeedCommune[]> {
   const fileFlag = process.argv.indexOf('--file');
-  if (fileFlag === -1) return [...COMMUNES];
 
-  const path = process.argv[fileFlag + 1];
-  if (!path) throw new Error('--file needs a path to a JSON file');
+  if (fileFlag !== -1) {
+    const path = process.argv[fileFlag + 1];
+    if (!path) throw new Error('--file needs a path to a JSON file');
+    return parseCommuneFile(await readFile(path, 'utf8'), path);
+  }
 
-  const parsed = JSON.parse(await readFile(path, 'utf8'));
-  if (!Array.isArray(parsed)) throw new Error('Commune file must contain a JSON array');
+  // The full national dataset ships in the repo. Only fall back to the
+  // hand-written pilot subset if it is somehow missing, so that a bad deploy
+  // degrades to "8 wilayas covered" rather than to nothing at all.
+  try {
+    return parseCommuneFile(await readFile(DEFAULT_DATASET, 'utf8'), DEFAULT_DATASET);
+  } catch {
+    console.warn(`No ${DEFAULT_DATASET} found - falling back to the pilot subset.`);
+    return [...COMMUNES];
+  }
+}
+
+function parseCommuneFile(raw: string, path: string): SeedCommune[] {
+  const parsed = JSON.parse(raw);
+  if (!Array.isArray(parsed)) throw new Error(`${path} must contain a JSON array`);
   return parsed as SeedCommune[];
 }
 
