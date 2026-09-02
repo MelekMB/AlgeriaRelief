@@ -1,4 +1,4 @@
-import { parseAlgerianMobile, formatNational } from '../../src/lib/phone.js';
+import { parsePhone as parseAlgerianMobile, formatNational } from '../../src/lib/phone.js';
 import { encrypt, decrypt, sign, unsign, hashToken, numericCode } from '../../src/lib/crypto.js';
 
 let fails = 0;
@@ -19,7 +19,11 @@ const cases: Array<[string, string | null]> = [
   ['00213 0661234567', '+213661234567'],
   ['021 12 34 56', null],      // landline (Algiers) -> rejected
   ['0455123456', null],        // not a mobile prefix
-  ['+33612345678', null],      // French number
+  ['+33612345678', '+33612345678'],   // French mobile, now accepted
+  ['+44 7700 900123', '+447700900123'],
+  ['0044 7700 900123', '+447700900123'],
+  ['+1 415 555 2671', '+14155552671'],
+  ['+9', null],                        // far too short
   ['', null],
 ];
 for (const [input, expected] of cases) {

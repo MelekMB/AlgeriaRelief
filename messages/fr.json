@@ -84,7 +84,7 @@
     "landmarkPlaceholder": "Ex. : devant la mosquée du quartier, arrêt de bus",
     "phone": "Numéro de téléphone",
     "phonePlaceholder": "0555 12 34 56",
-    "phoneHint": "Nous envoyons un code de confirmation. Votre numéro n'est jamais public.",
+    "phoneHint": "Nous envoyons un code de confirmation. Votre numéro n'est jamais public. Hors d'Algérie ? Écrivez le numéro avec l'indicatif, ex. +33.",
     "submit": "Publier la demande",
     "moreDetail": "Plus de détails"
   },
@@ -95,7 +95,7 @@
     "bodyTooLong": "Description trop longue.",
     "address": "Indiquez l'adresse ou choisissez un lieu de rendez-vous.",
     "landmark": "Indiquez le lieu de rendez-vous.",
-    "phone": "Numéro de mobile algérien invalide.",
+    "phone": "Numéro invalide. Hors d'Algérie ? Ajoutez l'indicatif du pays.",
     "blocked": "Cette demande ne peut pas être publiée. La plateforme n'accepte aucune information de paiement ni coordonnée bancaire. Décrivez seulement ce dont vous avez besoin.",
     "duplicate": "Une demande similaire existe dans la même commune. Est-ce la même ?",
     "alreadyOpen": "Vous avez déjà une demande ouverte. Fermez-la avant d'en publier une autre.",
