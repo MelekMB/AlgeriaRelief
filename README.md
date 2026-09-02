@@ -117,7 +117,13 @@ Breaking any one of these breaks the trust model:
 
 Post a request · phone OTP · donor sign-in · browse with filters · request detail · **claim lock** · batch nearby · gated address reveal · tap-to-call and WhatsApp · 4-digit delivery confirmation · close/renew your own request · flag → auto-quarantine · admin dashboard with kill switch and per-wilaya throttle · public delivery ledger · privacy and abuse pages · maintenance worker (claim lapse, expiry, "still needed?" ping) · locale parity gate.
 
-**Not yet run against a live database.** No local Postgres was available. `npm run smoke` exists precisely to close that gap in one command on Replit — run it before launch.
+**Verified against a live database on Replit.** `npm run doctor` all green (14 tables, 58 wilayas, 8 categories, 120 communes) and `npm run smoke` **ALL PASS** — the claim lock holds under contention, a second donor is denied the address, a wrong door code is rejected, and the sweeper returns lapsed claims and records no-shows. The production build succeeds there too (26 pages).
+
+### If the Replit build fails
+Three environment problems, all already handled in this repo — but worth knowing:
+- **Never press "Fix with Agent".** The Replit Agent once rewrote this repo unprompted (a whole parallel Vite + shadcn app under `artifacts/`, plus edits to `.replit`) and broke it. Recover with `git branch backup && git reset --hard origin/main && git clean -fd`.
+- **`git pull` refuses because `.replit` changed.** Replit rewrites that file on publish. Run `git checkout -- .replit` first.
+- **`NODE_ENV`.** Replit injects `NODE_ENV=development` into the environment, which makes `next build` emit a development build and fail while prerendering. `scripts/build.mjs` forces production and clears `.next` first; do not bypass it by calling `next build` directly.
 
 **Not built yet**
 1. LLM screening pass (Haiku) on top of the deterministic rules

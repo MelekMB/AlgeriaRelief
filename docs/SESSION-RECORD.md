@@ -472,3 +472,11 @@ Second attempt still failed. `git pull` was blocked because **Replit rewrites `.
 Final fix: `scripts/build.mjs`, a wrapper that sets `process.env.NODE_ENV = 'production'` and spawns `next build`, wired as `"build": "node scripts/build.mjs"`. Written as a Node script rather than an inline `NODE_ENV=production next build` so it also works on Windows. **Verified by running `NODE_ENV=development npm run build` locally** — the warning disappears and all 26 pages generate.
 
 Also flagged from the same screenshot: **Production Type is Autoscale** (2 vCPU / 4 GiB / 3 max), published 22 hours ago. `.replit` says `deploymentTarget = "vm"`, but an existing Replit deployment keeps the type it was first published with, so it must be changed in Publishing -> Adjust settings. Left a note about this inside `.replit` itself. On Autoscale the maintenance worker is killed between requests: claims never lapse and reserved requests stay locked forever.
+
+**Chunk 46 — Build green on Replit.** After the `.next`-clearing fix, `git pull && npm run build` succeeded in the Replit workspace: `[build] cleared .next`, compiled in 27.5s, types checked, **26/26 static pages**, all 11 screens present under both `/ar` and `/fr`, 103 kB shared JS, middleware 95.8 kB.
+
+Sequence of environment problems solved to get here, none of them application bugs: (1) the Replit Agent's unprompted rewrite of the repo; (2) `NODE_ENV=development` in `.replit`; (3) `NODE_ENV=development` also injected into the Replit environment itself, fixed with `scripts/build.mjs`; (4) a stale dev-mode `.next` directory causing `Cannot read properties of undefined (reading 'length')`, fixed by clearing `.next` at the start of every build; plus (5) `git pull` repeatedly blocked because Replit rewrites `.replit` on publish, needing `git checkout -- .replit` first.
+
+Updated the README Status section, which still wrongly claimed the app had never run against a live database, and added an "If the Replit build fails" section documenting all three environment traps for future reference.
+
+Remaining before launch: switch the deployment from **Autoscale** to **Reserved VM** in Publishing -> Adjust settings, republish, then the two things only Omar can do — verify the four emergency numbers and have a native Algerian speaker read the Arabic strings.
