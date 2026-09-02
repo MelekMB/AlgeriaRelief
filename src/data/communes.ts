@@ -18,6 +18,8 @@
  *     speaker before launch.
  */
 
+import { WILAYAS } from './wilayas.js';
+
 export type SeedCommune = {
   wilayaCode: string;
   code: string;
@@ -185,7 +187,7 @@ const blida = build('09', [
   ['بوعينان', 'Bouinan'],
 ]);
 
-export const COMMUNES: SeedCommune[] = [
+const detailed: SeedCommune[] = [
   ...bejaia,
   ...tiziOuzou,
   ...jijel,
@@ -195,3 +197,23 @@ export const COMMUNES: SeedCommune[] = [
   ...elTarf,
   ...blida,
 ];
+
+/**
+ * Every wilaya must offer at least its chef-lieu (administrative seat), which
+ * carries the same name as the wilaya itself.
+ *
+ * Without this, a user in any of the 50 wilayas not detailed above opens the
+ * town dropdown, finds it empty, and simply cannot post a request at all —
+ * the form will not submit without a commune. A single correct option is far
+ * better than none while the full dataset is pending.
+ */
+const chefLieux: SeedCommune[] = WILAYAS.filter(
+  (w) => !detailed.some((c) => c.wilayaCode === w.code),
+).map((w) => ({
+  wilayaCode: w.code,
+  code: `${w.code}000`,
+  nameAr: w.nameAr,
+  nameFr: w.nameFr,
+}));
+
+export const COMMUNES: SeedCommune[] = [...detailed, ...chefLieux];
