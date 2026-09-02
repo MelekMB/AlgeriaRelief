@@ -529,3 +529,23 @@ So the client-side exception was transient, thrown during the deploy itself, and
 Fix: `src/data/communes.ts` now appends a **chef-lieu** (administrative seat, which carries the wilaya's own name) for every wilaya not covered by the detailed lists. Verified: **170 communes, 58 of 58 wilayas covered, zero empty**. Build green, pushed as `39502ff`. The full official dataset can still be layered over the top via `npm run seed:geo -- --file communes.json`, and because the deployment self-seeds on boot the new rows arrive on the next republish.
 
 Also drafted a message for Omar to send to the Replit Agent instructing it to stop modifying the repository.
+
+**Chunk 51 — Live testing found two dead ends; then SMS cost and WhatsApp.** Omar reported he still could not finish a request, that international numbers did not work, that searching for his request by number said it did not exist, and that he could not navigate back — and said he was considering switching to the Replit Agent.
+
+Tested the live app directly rather than arguing. Findings:
+- Algiers now returns communes (Ain Benian, Ain Taya, Alger Centre), so the seed/advisory-lock deploy had landed.
+- Submitted a request with **`+33612345678`** — it published, landing on `/ar/request/sent?unverified=1` with "تم نشر طلبك". **International numbers were in fact working.**
+
+Two genuine bugs behind his complaints, both mine:
+1. **Locked out of your own request.** The no-SMS path published the request but never created a session, so `/my-request` bounced to sign-in, which needs a code that never arrives. The poster's own request was permanently unreachable. Fixed: unverified posters now get a session, which grants access to their own request only and does **not** confer verified status, so claiming and address reveal remain gated.
+2. **No way back.** `/signin` and the empty `/my-request` had no back link at all. Added.
+
+On the "should I use Replit instead" question: answered without defensiveness — noted the recurring pattern was fixes sitting in GitHub while he tested the old published build, and that the Replit Agent is what added a second application to the repo and edited `.replit`.
+
+**Privacy fix he asked for.** The form was persisting to `localStorage` indefinitely **including the home address** — directly contradicting the app's own privacy design on a shared or borrowed phone. Now: the address is never written to the browser at all; the rest expires after 30 minutes (still covering a dropped connection); everything is wiped once the request publishes; and a sign-out was added to `/my-request` since verification was otherwise remembered for 30 days.
+
+**Messaging.** Recommended against building in-app chat: WhatsApp has push notifications and universal reach while a web app does not, and an unmoderated private channel would reintroduce exactly the money-solicitation fraud the design removes. Offered to build a per-request thread after launch if calling proves insufficient.
+
+**SMS cost.** Added `npm run sms:test` to check credentials and carrier delivery in isolation, naming the trial-account restriction that only verified numbers receive messages. Then applied the main cost lever in code: **`SMS_VERIFY_REQUESTERS=false` by default**, so requesters no longer consume an SMS. Verifying the vulnerable side buys little — their post reveals nothing until a donor claims — while the control that matters (an address requires a verified phone) is on the donor side and is untouched. Spend now scales with donors, not requests.
+
+**WhatsApp OTP.** Explained honestly that it is neither free nor instant: outbound authentication templates are billed per country, and setup needs Meta Business verification. The genuinely free variant is **user-initiated** — a `wa.me` link with the code pre-filled, sent by the user to our number, matched by a webhook, since inbound messages are free — which is also better UX and sidesteps `+213` carrier delivery risk entirely.
