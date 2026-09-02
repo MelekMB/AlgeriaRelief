@@ -27,7 +27,12 @@ export default async function MyRequestPage({
   if (!own) {
     return (
       <main className="mx-auto flex w-full max-w-xl flex-col gap-5 px-4 py-8">
-        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
+          <Link href="/" className="min-h-12 px-2 py-2 text-sm text-muted">
+            {tc('back')}
+          </Link>
+        </div>
         <p className="text-muted">{t('none')}</p>
         <Link
           href="/needs"

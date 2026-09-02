@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { setDraft, type RequestDraft } from '@/lib/draft';
+import { setSession } from '@/lib/session';
 import { requestOtp } from '@/lib/otp';
 import { upsertPerson } from '@/lib/people';
 import { parseAlgerianMobile } from '@/lib/phone';
@@ -109,6 +110,13 @@ export async function submitRequest(
       dedupeFingerprint: fingerprint,
       shadowed: verdict.action === 'shadow',
     });
+
+    // Give the poster a session even though they are unverified. It only ever
+    // lets them manage their OWN request; it does not grant verified status,
+    // so they still cannot claim anyone else's or see an address. Without it
+    // they could never find, renew or close the request they just made -
+    // there is no SMS code coming to sign in with.
+    await setSession(personId);
 
     if (!created) {
       console.error(
