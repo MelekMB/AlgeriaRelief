@@ -11,9 +11,9 @@
  * Expected shape: [{ wilayaCode, code, nameAr, nameFr, lat?, lng? }, ...]
  */
 import { readFile } from 'node:fs/promises';
-import { sql } from 'drizzle-orm';
+import { inArray, sql } from 'drizzle-orm';
 import { db } from '../src/db/index.js';
-import { wilayas, communes, categories } from '../src/db/schema.js';
+import { wilayas, communes, categories, requests } from '../src/db/schema.js';
 import { WILAYAS } from '../src/data/wilayas.js';
 import { COMMUNES, type SeedCommune } from '../src/data/communes.js';
 import { CATEGORIES } from '../src/data/categories.js';
@@ -46,7 +46,23 @@ function parseCommuneFile(raw: string, path: string): SeedCommune[] {
   return parsed as SeedCommune[];
 }
 
+// Arbitrary but fixed key for the advisory lock.
+const SEED_LOCK = 918273645;
+
 async function main() {
+  // Only one process may seed at a time. Autoscale boots several instances,
+  // each running this on start; concurrent upserts on the same rows collide
+  // and leave the table half-populated - which is exactly how one wilaya
+  // ended up with no communes at all in production.
+  const lockRows = (await db.execute(
+    sql`select pg_try_advisory_lock(${SEED_LOCK}) as locked`,
+  )) as unknown as Array<{ locked: boolean }>;
+
+  if (!lockRows[0]?.locked) {
+    console.log('Another process is already seeding - skipping.');
+    process.exit(0);
+  }
+
   console.log('Seeding wilayas…');
   await db
     .insert(wilayas)
@@ -105,9 +121,45 @@ async function main() {
       });
   }
 
+  // Remove rows left over from an earlier, smaller dataset so the table
+  // matches the file exactly. Anything a request still points at is kept:
+  // losing a family's commune would orphan their request.
+  const wanted = new Set(values.map((v) => v.code));
+  const existing = await db.select({ id: communes.id, code: communes.code }).from(communes);
+  const staleIds = existing.filter((r) => !wanted.has(r.code)).map((r) => r.id);
+
+  if (staleIds.length > 0) {
+    const inUse = new Set(
+      (await db.select({ id: requests.communeId }).from(requests)).map((r) => r.id),
+    );
+    const removable = staleIds.filter((id) => !inUse.has(id));
+    for (let i = 0; i < removable.length; i += CHUNK) {
+      await db.delete(communes).where(inArray(communes.id, removable.slice(i, i + CHUNK)));
+    }
+    console.log(`Removed ${removable.length} stale commune(s) from an older dataset.`);
+  }
+
+  // Verify, and shout if any wilaya ended up with nothing: an empty dropdown
+  // means people in that wilaya cannot post at all.
+  const perWilaya = await db
+    .select({ code: wilayas.code, n: sql<number>`count(${communes.id})::int` })
+    .from(wilayas)
+    .leftJoin(communes, sql`${communes.wilayaId} = ${wilayas.id}`)
+    .groupBy(wilayas.code);
+
+  const empty = perWilaya.filter((r) => Number(r.n) === 0).map((r) => r.code);
+  const total = perWilaya.reduce((sum, r) => sum + Number(r.n), 0);
+
   console.log(
-    `Done. ${WILAYAS.length} wilayas, ${CATEGORIES.length} categories, ${values.length} communes.`,
+    `Done. ${WILAYAS.length} wilayas, ${CATEGORIES.length} categories, ${total} communes in the database.`,
   );
+
+  if (empty.length > 0) {
+    console.error(`WARNING: these wilayas have no communes: ${empty.join(', ')}`);
+    process.exitCode = 1;
+  }
+
+  await db.execute(sql`select pg_advisory_unlock(${SEED_LOCK})`);
 
   if (process.argv.indexOf('--file') === -1) {
     console.warn(
