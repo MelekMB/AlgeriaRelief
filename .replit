@@ -5,10 +5,14 @@ run = "npm run dev"
 channel = "stable-24_11"
 
 # IMPORTANT: deploymentTarget MUST stay "vm" (Reserved VM).
-# On Autoscale, background work is throttled or killed once a response is sent —
+# On Autoscale, background work is throttled or killed once a response is sent:
 # the claim-lapse sweeper, the 72h expiry job and the 24h "Still needed?" SMS
 # would silently stop running. This is a confirmed failure mode from a prior
 # project on this account. Do not switch this to "autoscale".
+#
+# NOTE: this file is not the whole story. An existing Replit deployment keeps
+# its own configured type in the Publishing UI, so if it was first published as
+# Autoscale it stays Autoscale until changed there under "Adjust settings".
 [deployment]
 deploymentTarget = "vm"
 build = ["npm", "run", "build"]
@@ -18,6 +22,11 @@ run = ["npm", "run", "start"]
 localPort = 3000
 externalPort = 80
 
+# NODE_ENV is deliberately NOT set here.
+# Replit's template sets NODE_ENV = "development", which makes `next build`
+# produce a development build: React resolves to a mismatched copy and
+# prerendering dies with "Cannot read properties of null (reading
+# 'useContext')". Next sets NODE_ENV itself, development for `next dev` and
+# production for `next build`. Leave it unset.
 [env]
 NEXT_TELEMETRY_DISABLED = "1"
-NODE_ENV = "development"
