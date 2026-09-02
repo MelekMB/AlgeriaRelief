@@ -460,3 +460,15 @@ Also visible in the output: the `[sms:none] → +213500000001: 0324` lines, conf
 `cat .replit` confirmed **`deploymentTarget = "vm"` survived** — the Agent's 2-line edit to that file was reverted by the reset, so the maintenance worker will not be killed on deploy.
 
 Root cause of the original "حدث خطأ" is now settled: it was the Replit Agent's unprompted rewrite of the repo, not application code. The app itself was correct.
+
+**Chunk 45 — Publish failing: NODE_ENV, and the deployment is on Autoscale.** Omar's Publishing screenshot showed the Build stage failing with `<Html> should not be imported outside of pages/_document`, `Export encountered an error on /_error: /500`, repeated "unique key prop" warnings, and `TypeError: Cannot read properties of null (reading 'useContext')` while prerendering `/fr/request/new`. Replit offered a **"Fix with Agent"** button — told him explicitly not to press it, since the Agent is what wrecked the repo before.
+
+**Reproduced the failure locally** with `NODE_ENV=development npx next build` — identical `useContext` null error and key warnings. Cause: with NODE_ENV=development, `next build` emits a development build, React resolves to a mismatched copy, and prerendering dies.
+
+First fix: removed `NODE_ENV = "development"` from `.replit` `[env]` (Replit's template sets it) and rewrote the file in plain ASCII after the console mangled its em-dashes, adding a comment explaining why it must stay unset. Local build then passed, 26 pages. Pushed.
+
+Second attempt still failed. `git pull` was blocked because **Replit rewrites `.replit` itself on publish**, so `git checkout -- .replit` was needed first. The build then reported **"You are using a non-standard NODE_ENV value in your environment"** and failed again on `/404` — proving NODE_ENV=development also comes from the Replit environment itself, not only from `.replit`.
+
+Final fix: `scripts/build.mjs`, a wrapper that sets `process.env.NODE_ENV = 'production'` and spawns `next build`, wired as `"build": "node scripts/build.mjs"`. Written as a Node script rather than an inline `NODE_ENV=production next build` so it also works on Windows. **Verified by running `NODE_ENV=development npm run build` locally** — the warning disappears and all 26 pages generate.
+
+Also flagged from the same screenshot: **Production Type is Autoscale** (2 vCPU / 4 GiB / 3 max), published 22 hours ago. `.replit` says `deploymentTarget = "vm"`, but an existing Replit deployment keeps the type it was first published with, so it must be changed in Publishing -> Adjust settings. Left a note about this inside `.replit` itself. On Autoscale the maintenance worker is killed between requests: claims never lapse and reserved requests stay locked forever.
