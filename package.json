@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
     "build": "node scripts/build.mjs",
-    "start": "sh -c \"npm run worker & next start -H 0.0.0.0\"",
+    "start": "node scripts/start.mjs",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "tsx scripts/dev/selftest.ts && tsx scripts/dev/screening.test.ts && tsx scripts/dev/messages.test.ts",
