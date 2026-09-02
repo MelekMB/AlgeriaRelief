@@ -516,3 +516,16 @@ The logs also revealed the deployment was still running the **old** start comman
 Build verified green (26 pages) and pushed as `03decbb`.
 
 **Git divergence, again.** Replit had made its own local `Published your App` commits, so `git pull` refused with "You have divergent branches". Resolved with `git fetch origin && git reset --hard origin/main` — GitHub is the source of truth and Replit's publish commits carry nothing of ours. Told Omar this will recur after every publish and that the same one-liner is the routine fix.
+
+**Chunk 50 — Live app verified working; commune coverage was the real remaining blocker.** Omar reported an "Application error: a client-side exception has occurred" on the live app, plus that only one wilaya showed a town list.
+
+Checked the live deployment directly with the browser rather than asking for more screenshots:
+- `https://algeria-relief.replit.app/ar` renders correctly (emergency banner, two doors, safety rules, ledger link), **no console errors**.
+- `/ar/needs` renders — confirming the `ORDER BY position 0` fix reached production; that page had been crashing before.
+- `/api/communes?wilaya=06` returns Adekar, Akbou, Amizour, Aokas... but **`/api/communes?wilaya=16` (Algiers) returns `{"communes":[]}`**.
+
+So the client-side exception was transient, thrown during the deploy itself, and is gone. The commune gap, however, was a genuine launch blocker and worse than reported: **only 8 of 58 wilayas had any communes at all**, because `src/data/communes.ts` deliberately covered just the fire-prone wilayas. Anyone in the other 50 opened the town dropdown, found it empty, and could not submit the form — browser validation blocks on the required select. The app was effectively unusable outside 8 wilayas.
+
+Fix: `src/data/communes.ts` now appends a **chef-lieu** (administrative seat, which carries the wilaya's own name) for every wilaya not covered by the detailed lists. Verified: **170 communes, 58 of 58 wilayas covered, zero empty**. Build green, pushed as `39502ff`. The full official dataset can still be layered over the top via `npm run seed:geo -- --file communes.json`, and because the deployment self-seeds on boot the new rows arrive on the next republish.
+
+Also drafted a message for Omar to send to the Replit Agent instructing it to stop modifying the repository.
