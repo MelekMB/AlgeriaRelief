@@ -27,10 +27,18 @@ export async function sendSms(to: string, body: string): Promise<SmsResult> {
       return sendViaTwilio(to, body);
     case 'none':
     default:
-      // Dev/no-provider mode. The code is printed so the flow can be tested
-      // end to end without spending money or waiting on carrier delivery.
-      console.log(`[sms:none] → ${to}: ${body}`);
-      return { ok: true, provider: 'none' };
+      if (process.env.NODE_ENV !== 'production') {
+        // Dev mode: print the code so the flow can be tested end to end
+        // without spending money or waiting on carrier delivery.
+        console.log(`[sms:none] → ${to}: ${body}`);
+        return { ok: true, provider: 'none' };
+      }
+      // In production, "no provider" must report failure rather than pretend
+      // success. Pretending left users staring at a code entry screen for a
+      // message that was only ever written to a log they cannot read, with no
+      // way to finish their request. Callers treat this as the unverified
+      // tier and publish anyway.
+      return { ok: false, provider: 'none', error: 'No SMS provider configured' };
   }
 }
 
