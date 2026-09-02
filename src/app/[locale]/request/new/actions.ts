@@ -83,7 +83,19 @@ export async function submitRequest(
 
   await setDraft(draft);
 
-  const otp = await requestOtp(parsedPhone.e164);
+  // Only send a verification SMS to requesters when explicitly switched on.
+  //
+  // Every message costs money, and verifying the person ASKING for help buys
+  // very little: they are the vulnerable side, and their post reveals nothing
+  // until a donor claims it. The control that matters is on the DONOR side -
+  // seeing someone's address requires a verified phone - and that is
+  // unaffected by this. Default off keeps SMS spend proportional to donors,
+  // who are far fewer than requests.
+  const verifyRequesters = process.env.SMS_VERIFY_REQUESTERS === 'true';
+
+  const otp = verifyRequesters
+    ? await requestOtp(parsedPhone.e164)
+    : ({ ok: false, reason: 'send_failed' } as const);
 
   if (!otp.ok) {
     if (otp.reason === 'too_many' || otp.reason === 'too_soon') return { error: 'tooMany' };
