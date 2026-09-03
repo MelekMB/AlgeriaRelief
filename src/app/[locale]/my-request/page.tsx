@@ -84,7 +84,7 @@ export default async function MyRequestPage({
           <p className="mt-1 font-mono text-4xl font-bold tracking-widest text-brand">
             <bdi>{code}</bdi>
           </p>
-          <p className="mt-2 text-sm text-muted">{t('yourCodeHint')}</p>
+          <p className="mt-2 text-sm text-muted">{t('doorAlways')}</p>
         </div>
       )}
 

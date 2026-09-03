@@ -71,7 +71,7 @@ export async function verifyAndCreate(
   await clearDraft();
   if (!created) return { error: 'wrong' };
 
-  redirect(`/${locale}/request/sent?ref=${created.manageCode}`);
+  redirect(`/${locale}/request/sent?ref=${created.manageCode}&door=${created.confirmCode}`);
 }
 
 export async function resendCode(): Promise<VerifyState> {

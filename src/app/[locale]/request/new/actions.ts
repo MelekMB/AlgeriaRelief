@@ -143,7 +143,9 @@ export async function submitRequest(
       );
       return { error: 'generic' };
     }
-    redirect(`/${locale}/request/sent?unverified=1&ref=${created.manageCode}`);
+    redirect(
+      `/${locale}/request/sent?unverified=1&ref=${created.manageCode}&door=${created.confirmCode}`,
+    );
   }
 
   redirect(`/${locale}/verify`);

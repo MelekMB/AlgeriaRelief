@@ -7,10 +7,10 @@ export default async function SentPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ unverified?: string; ref?: string }>;
+  searchParams: Promise<{ unverified?: string; ref?: string; door?: string }>;
 }) {
   const { locale } = await params;
-  const { unverified, ref } = await searchParams;
+  const { unverified, ref, door } = await searchParams;
   setRequestLocale(locale);
 
   const t = await getTranslations('sent');
@@ -30,6 +30,16 @@ export default async function SentPage({
             <bdi>{ref}</bdi>
           </p>
           <p className="mt-2 text-sm text-muted">{t('referenceHint')}</p>
+        </div>
+      )}
+
+      {door && (
+        <div className="rounded-xl border-2 border-danger/50 bg-surface p-4 text-center">
+          <p className="text-sm font-semibold">{t('doorTitle')}</p>
+          <p className="mt-1 font-mono text-4xl font-bold tracking-widest text-danger">
+            <bdi>{door}</bdi>
+          </p>
+          <p className="mt-2 text-sm text-muted">{t('doorHint')}</p>
         </div>
       )}
 

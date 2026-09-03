@@ -596,3 +596,16 @@ Fix that satisfies both: every request now carries a **6-digit reference code**,
 - All call sites and the smoke test updated for the new return shape; the smoke test now also asserts the reference code is six digits.
 
 Net effect: verification is gone as Omar wanted, the app stays usable with zero cost and zero external accounts, and taking over someone else's request still requires a secret only they were shown.
+
+**Chunk 55 — Door code was unreachable without SMS; moved to post time.** Omar asked how the donor gets the code the requester holds. The question exposed a hole created by dropping SMS: `confirmCode` was generated **when a donor claimed**, and the requester learned it via `notifyRequesterOfClaim`, an SMS. With no provider that SMS goes nowhere, so a donor would arrive at a family who had never seen the number and the delivery could not be completed.
+
+Fix: the door code is now generated **with the request**, so the person asking for help holds it from the moment they post.
+- `createRequest` generates a 4-digit `confirmCode` alongside the 6-digit `manageCode` and returns both.
+- `claimRequest` no longer regenerates it — doing so would leave the family reading out a number the donor's screen no longer expects.
+- `releaseExpiredClaims` no longer nulls it, so a lapsed claim does not strip the family's code.
+- `getOwnConfirmCode` no longer requires status `claimed`, so it can be read at any time.
+- Shown on the confirmation page in a red-bordered panel ("read this to the donor when they arrive, give it to nobody before"), and again on `/my-request`.
+
+Now two distinct codes, with distinct jobs: the **6-digit reference** is a secret used to get back into your own request from another device, and the **4-digit door code** is spoken aloud to the donor at handover. Neither needs SMS.
+
+231 locale keys in both languages, tests green, build green (26 pages).

@@ -130,7 +130,9 @@
     "viewNeeds": "Voir les autres besoins",
     "home": "Accueil",
     "referenceTitle": "Code de votre demande",
-    "referenceHint": "Gardez ce code. Il vous permet de retrouver votre demande depuis un autre téléphone."
+    "referenceHint": "Gardez ce code. Il vous permet de retrouver votre demande depuis un autre téléphone.",
+    "doorTitle": "Code de remise",
+    "doorHint": "Lisez ce code au donateur à son arrivée. Ne le donnez à personne avant."
   },
   "needs": {
     "title": "Besoins près de chez vous",
@@ -204,7 +206,8 @@
     "closed": "Demande fermée. Merci.",
     "renewed": "Demande prolongée.",
     "signOut": "Se déconnecter de cet appareil",
-    "reference": "Code de votre demande"
+    "reference": "Code de votre demande",
+    "doorAlways": "À lire au donateur uniquement au moment de la remise."
   },
   "flag": {
     "button": "Signaler cette demande",

@@ -269,7 +269,7 @@ export type CreateRequestInput = {
 
 export async function createRequest(
   input: CreateRequestInput,
-): Promise<{ id: number; manageCode: string } | null> {
+): Promise<{ id: number; manageCode: string; confirmCode: string } | null> {
   const [category] = await db
     .select({ id: categories.id })
     .from(categories)
@@ -279,11 +279,17 @@ export async function createRequest(
   if (!category) return null;
 
   const manageCode = numericCode(6);
+  // The door code is generated now, not when a donor claims, so the person
+  // asking for help has it in their hand from the start. With no SMS there is
+  // no way to tell them later, and a donor arriving to a family who does not
+  // know the number cannot complete the delivery.
+  const confirmCode = numericCode(4);
 
   const [row] = await db
     .insert(requests)
     .values({
       manageCode,
+      confirmCode,
       personId: input.personId,
       categoryId: category.id,
       communeId: input.communeId,
@@ -303,7 +309,7 @@ export async function createRequest(
     })
     .returning({ id: requests.id });
 
-  return row ? { id: row.id, manageCode } : null;
+  return row ? { id: row.id, manageCode, confirmCode } : null;
 }
 
 /**
@@ -416,9 +422,9 @@ export async function getOwnConfirmCode(
   personId: number,
 ): Promise<string | null> {
   const [row] = await db
-    .select({ code: requests.confirmCode, status: requests.status })
+    .select({ code: requests.confirmCode })
     .from(requests)
     .where(and(eq(requests.id, requestId), eq(requests.personId, personId)))
     .limit(1);
-  return row?.status === 'claimed' ? (row.code ?? null) : null;
+  return row?.code ?? null;
 }

@@ -127,7 +127,9 @@ export async function claimRequest(requestId: number, personId: number): Promise
       claimedByPersonId: personId,
       claimedAt: now,
       claimExpiresAt,
-      confirmCode: numericCode(4),
+      // The door code was set when the request was created and the family
+      // already has it. Regenerating here would leave them reading out a
+      // number the donor's screen no longer expects.
     })
     .where(
       and(
@@ -287,7 +289,6 @@ export async function releaseExpiredClaims(): Promise<number> {
       claimedByPersonId: null,
       claimedAt: null,
       claimExpiresAt: null,
-      confirmCode: null,
     })
     .where(inArray(requests.id, ids));
 
