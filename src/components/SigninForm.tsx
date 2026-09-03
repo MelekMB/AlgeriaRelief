@@ -1,8 +1,12 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { signinAction, type SigninState } from '@/app/[locale]/signin/actions';
+import {
+  pollWhatsAppSignin,
+  signinAction,
+  type SigninState,
+} from '@/app/[locale]/signin/actions';
 
 export default function SigninForm({ locale, next }: { locale: string; next: string }) {
   const t = useTranslations('form');
@@ -15,6 +19,70 @@ export default function SigninForm({ locale, next }: { locale: string; next: str
   });
 
   const onCodeStep = state.step === 'code';
+  const onWhatsApp = state.step === 'whatsapp';
+  const [waiting, setWaiting] = useState(false);
+
+  // Once the code is showing, ask the server every few seconds whether the
+  // user's WhatsApp message has reached us. Nothing is sent, so this costs
+  // nothing; it just watches for the inbound webhook to land.
+  useEffect(() => {
+    if (!onWhatsApp) return;
+    setWaiting(true);
+    let stop = false;
+
+    const tick = async () => {
+      if (stop) return;
+      try {
+        const result = await pollWhatsAppSignin();
+        if (result.verified && result.next) {
+          window.location.href = `/${locale}${result.next}`;
+          return;
+        }
+      } catch {
+        /* transient - keep waiting */
+      }
+      if (!stop) setTimeout(tick, 3000);
+    };
+
+    const timer = setTimeout(tick, 3000);
+    return () => {
+      stop = true;
+      clearTimeout(timer);
+    };
+  }, [onWhatsApp, locale]);
+
+  if (onWhatsApp) {
+    return (
+      <div className="flex flex-col gap-4">
+        <h2 className="text-lg font-bold">{tv('whatsappTitle')}</h2>
+        <p className="text-sm text-muted">{tv('whatsappHint')}</p>
+
+        <div className="rounded-xl border-2 border-brand bg-surface p-4 text-center">
+          <p className="text-sm font-semibold">{tv('whatsappCode')}</p>
+          <p className="mt-1 font-mono text-3xl font-bold tracking-widest text-brand">
+            <bdi>{state.code}</bdi>
+          </p>
+        </div>
+
+        {state.whatsappLink && (
+          <a
+            href={state.whatsappLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex min-h-14 items-center justify-center rounded-xl bg-brand text-lg font-bold text-brand-contrast"
+          >
+            {tv('whatsappButton')}
+          </a>
+        )}
+
+        {waiting && (
+          <p aria-live="polite" className="text-center text-sm text-muted">
+            {tv('whatsappWaiting')}
+          </p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <form action={formAction} className="flex flex-col gap-4">

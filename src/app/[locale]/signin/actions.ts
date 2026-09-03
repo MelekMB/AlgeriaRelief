@@ -1,15 +1,21 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { requestOtp, verifyOtp } from '@/lib/otp';
+import { issueCodeOnly, isCodeConsumed, requestOtp, verifyOtp } from '@/lib/otp';
+import { clearPending, getPending, setPending } from '@/lib/pendingVerification';
+import { upsertPerson } from '@/lib/people';
+import { whatsappConfigured, whatsappVerifyLink } from '@/lib/whatsapp';
 import { parseAlgerianMobile } from '@/lib/phone';
 import { setSession } from '@/lib/session';
 
 export type SigninState = {
-  step: 'phone' | 'code';
+  step: 'phone' | 'code' | 'whatsapp';
   phone?: string;
   error?: string;
   devCode?: string;
+  /** Opens WhatsApp with the code pre-filled. */
+  whatsappLink?: string;
+  code?: string;
 };
 
 /**
@@ -29,6 +35,25 @@ export async function signinAction(
   if (intent === 'send') {
     const parsed = parseAlgerianMobile(String(formData.get('phone') ?? ''));
     if (!parsed.ok) return { step: 'phone', error: 'phone' };
+
+    // Free path: issue a code and let the user send it to us on WhatsApp.
+    // We never send a message, so this costs nothing at any volume.
+    if (whatsappConfigured()) {
+      const issued = await issueCodeOnly(parsed.e164);
+      if (!issued.ok) {
+        return {
+          step: 'phone',
+          error: issued.reason === 'too_many' || issued.reason === 'too_soon' ? 'tooMany' : 'phone',
+        };
+      }
+      await setPending({ e164: issued.e164, code: issued.code, next });
+      return {
+        step: 'whatsapp',
+        phone: issued.e164,
+        code: issued.code,
+        whatsappLink: whatsappVerifyLink(issued.code) ?? undefined,
+      };
+    }
 
     const otp = await requestOtp(parsed.e164);
     if (!otp.ok) {
@@ -60,4 +85,25 @@ export async function signinAction(
   // Only ever redirect to an in-app path — never to an attacker-supplied host.
   const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/needs';
   redirect(`/${locale}${safeNext}`);
+}
+
+/**
+ * Polled by the WhatsApp screen: has our code reached us yet?
+ *
+ * Answers only for the code held in THIS browser's encrypted cookie, so it
+ * cannot be used to piggyback on someone else's verification.
+ */
+export async function pollWhatsAppSignin(): Promise<{ verified: boolean; next?: string }> {
+  const pending = await getPending();
+  if (!pending) return { verified: false };
+
+  if (!(await isCodeConsumed(pending.e164, pending.code))) return { verified: false };
+
+  const personId = await upsertPerson(pending.e164, { verified: true });
+  await setSession(personId);
+  await clearPending();
+
+  const safeNext =
+    pending.next.startsWith('/') && !pending.next.startsWith('//') ? pending.next : '/needs';
+  return { verified: true, next: safeNext };
 }

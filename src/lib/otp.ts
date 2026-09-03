@@ -113,3 +113,69 @@ export async function verifyOtp(phoneInput: string, code: string): Promise<Verif
   const personId = await upsertPerson(parsed.e164, { verified: true });
   return { ok: true, personId };
 }
+
+/**
+ * Creates a code WITHOUT sending anything.
+ *
+ * Used by the WhatsApp flow, where the user delivers the code to us rather
+ * than the other way round - which is what makes it free.
+ */
+export async function issueCodeOnly(
+  phoneInput: string,
+): Promise<{ ok: true; code: string; e164: string } | { ok: false; reason: 'invalid_phone' | 'too_soon' | 'too_many' }> {
+  const parsed = parseAlgerianMobile(phoneInput);
+  if (!parsed.ok) return { ok: false, reason: 'invalid_phone' };
+
+  const phoneHash = hashToken(parsed.e164);
+  const now = new Date();
+
+  const [recent] = await db
+    .select({ createdAt: otpCodes.createdAt })
+    .from(otpCodes)
+    .where(eq(otpCodes.phoneHash, phoneHash))
+    .orderBy(desc(otpCodes.createdAt))
+    .limit(1);
+
+  if (recent && (now.getTime() - recent.createdAt.getTime()) / 1000 < MIN_SECONDS_BETWEEN_SENDS) {
+    return { ok: false, reason: 'too_soon' };
+  }
+
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(otpCodes)
+    .where(
+      and(
+        eq(otpCodes.phoneHash, phoneHash),
+        gt(otpCodes.createdAt, new Date(now.getTime() - 60 * 60 * 1000)),
+      ),
+    );
+
+  if (count >= MAX_SENDS_PER_HOUR) return { ok: false, reason: 'too_many' };
+
+  const code = numericCode(CODE_LENGTH);
+
+  await db.insert(otpCodes).values({
+    phoneHash,
+    codeHash: hashToken(code),
+    expiresAt: new Date(now.getTime() + CODE_TTL_MINUTES * 60 * 1000),
+  });
+
+  return { ok: true, code, e164: parsed.e164 };
+}
+
+/**
+ * Has the code we issued in this browser been delivered to us over WhatsApp?
+ *
+ * Checked against the exact code AND number, so a poller cannot claim someone
+ * else's verification by guessing.
+ */
+export async function isCodeConsumed(e164: string, code: string): Promise<boolean> {
+  const [row] = await db
+    .select({ consumedAt: otpCodes.consumedAt })
+    .from(otpCodes)
+    .where(and(eq(otpCodes.phoneHash, hashToken(e164)), eq(otpCodes.codeHash, hashToken(code))))
+    .orderBy(desc(otpCodes.createdAt))
+    .limit(1);
+
+  return Boolean(row?.consumedAt);
+}

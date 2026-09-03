@@ -115,7 +115,12 @@
     "expired": "Code expiré. Demandez-en un nouveau.",
     "noCode": "Aucun code. Demandez-en un nouveau.",
     "tooMany": "Trop de tentatives. Demandez un nouveau code.",
-    "smsFailed": "L'envoi du SMS a échoué. Votre demande est publiée mais non vérifiée — elle apparaîtra après les demandes vérifiées."
+    "smsFailed": "L'envoi du SMS a échoué. Votre demande est publiée mais non vérifiée — elle apparaîtra après les demandes vérifiées.",
+    "whatsappTitle": "Confirmez votre numéro sur WhatsApp — gratuit",
+    "whatsappHint": "Appuyez sur le bouton, puis envoyez le message affiché. Nous reconnaîtrons votre numéro automatiquement.",
+    "whatsappButton": "Ouvrir WhatsApp et envoyer le code",
+    "whatsappWaiting": "En attente de votre message…",
+    "whatsappCode": "Code"
   },
   "sent": {
     "title": "Votre demande est publiée",
