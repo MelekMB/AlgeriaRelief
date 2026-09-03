@@ -128,7 +128,9 @@
     "expires": "La demande expire dans 72 heures",
     "unverified": "Votre demande n'est pas vérifiée car le SMS n'est pas arrivé. Elle apparaîtra après les demandes vérifiées.",
     "viewNeeds": "Voir les autres besoins",
-    "home": "Accueil"
+    "home": "Accueil",
+    "referenceTitle": "Code de votre demande",
+    "referenceHint": "Gardez ce code. Il vous permet de retrouver votre demande depuis un autre téléphone."
   },
   "needs": {
     "title": "Besoins près de chez vous",
@@ -201,7 +203,8 @@
     "renewHint": "Prolonge la demande de 72 heures.",
     "closed": "Demande fermée. Merci.",
     "renewed": "Demande prolongée.",
-    "signOut": "Se déconnecter de cet appareil"
+    "signOut": "Se déconnecter de cet appareil",
+    "reference": "Code de votre demande"
   },
   "flag": {
     "button": "Signaler cette demande",
@@ -261,5 +264,11 @@
     "approveTitle": "Vérifier un numéro manuellement",
     "approveHint": "Saisissez le code reçu sur WhatsApp ; le numéro de l'expéditeur sera vérifié.",
     "approve": "Vérifier"
+  },
+  "signin": {
+    "referenceLabel": "Code de la demande",
+    "referenceHint": "Le code à 6 chiffres affiché lors de la publication.",
+    "notFound": "Numéro ou code incorrect.",
+    "title": "Accéder à votre demande"
   }
 }

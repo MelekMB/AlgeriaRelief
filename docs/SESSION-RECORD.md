@@ -582,3 +582,17 @@ Cost comparison given to him for 100k verifications: SMS to Algeria ~**$8,000**;
 So added a **manual approval bridge** that works today with no Meta at all: the user still taps the `wa.me` link and sends the code to his ordinary WhatsApp; he reads it and types it into a new box on `/admin`. `approveCodeManually` does exactly what the webhook does — consume the code, verify the number it was issued to — so switching to the automated path later changes nothing for users. Only reachable behind `ADMIN_PASSWORD`.
 
 221 locale keys in both languages, tests green, build green (26 pages).
+
+**Chunk 54 — Verification dropped by the operator's choice; reference codes added so sign-in still works.** Omar decided to remove phone verification entirely ("let me call, we will only announce that they should be careful") and separately reported he could not get into his own request after entering his number.
+
+Diagnosed the second from the code: with no SMS provider, `signinAction` called `requestOtp`, the send failed, and it returned a generic error — so **sign-in was impossible whenever no verification channel existed**. Anyone who lost their session (new device, cleared cookies) could never reach their own request again.
+
+Flagged the danger in simply removing verification: if entering a phone number alone grants a session, a stranger who knows someone's number could open their request, read their door code, or close it on them.
+
+Fix that satisfies both: every request now carries a **6-digit reference code**, generated at creation and shown once to the poster.
+- `requests.manageCode` added to the schema; `createRequest` generates it and now returns `{ id, manageCode }`.
+- Displayed prominently on the confirmation page and again on `/my-request`, with "keep this code, you need it to return from another phone".
+- When no verification channel is configured, sign-in asks for **phone + reference code** and matches both via `findByReference`. Knowing the number is not enough.
+- All call sites and the smoke test updated for the new return shape; the smoke test now also asserts the reference code is six digits.
+
+Net effect: verification is gone as Omar wanted, the app stays usable with zero cost and zero external accounts, and taking over someone else's request still requires a secret only they were shown.

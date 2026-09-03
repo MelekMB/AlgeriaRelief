@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, gt, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { categories, communes, contactReveals, people, requests, wilayas } from '@/db/schema';
-import { decrypt, encrypt as encryptValue } from './crypto';
+import { decrypt, encrypt as encryptValue, numericCode } from './crypto';
 import { formatNational } from './phone';
 
 /**
@@ -267,7 +267,9 @@ export type CreateRequestInput = {
   shadowed: boolean;
 };
 
-export async function createRequest(input: CreateRequestInput): Promise<number | null> {
+export async function createRequest(
+  input: CreateRequestInput,
+): Promise<{ id: number; manageCode: string } | null> {
   const [category] = await db
     .select({ id: categories.id })
     .from(categories)
@@ -276,9 +278,12 @@ export async function createRequest(input: CreateRequestInput): Promise<number |
 
   if (!category) return null;
 
+  const manageCode = numericCode(6);
+
   const [row] = await db
     .insert(requests)
     .values({
+      manageCode,
       personId: input.personId,
       categoryId: category.id,
       communeId: input.communeId,
@@ -298,7 +303,42 @@ export async function createRequest(input: CreateRequestInput): Promise<number |
     })
     .returning({ id: requests.id });
 
-  return row?.id ?? null;
+  return row ? { id: row.id, manageCode } : null;
+}
+
+/**
+ * Sign in to your own request with the reference code shown when you posted.
+ *
+ * This is the account recovery path when there is no verification channel:
+ * knowing someone's phone number is not enough, you must also have the code
+ * only the poster was shown.
+ */
+export async function findByReference(
+  phoneHash: string,
+  manageCode: string,
+): Promise<number | null> {
+  const [row] = await db
+    .select({ personId: requests.personId })
+    .from(requests)
+    .innerJoin(people, eq(people.id, requests.personId))
+    .where(and(eq(people.phoneHash, phoneHash), eq(requests.manageCode, manageCode.trim())))
+    .orderBy(desc(requests.createdAt))
+    .limit(1);
+
+  return row?.personId ?? null;
+}
+
+/** The reference code, shown only to the person who posted. */
+export async function getOwnManageCode(
+  requestId: number,
+  personId: number,
+): Promise<string | null> {
+  const [row] = await db
+    .select({ code: requests.manageCode })
+    .from(requests)
+    .where(and(eq(requests.id, requestId), eq(requests.personId, personId)))
+    .limit(1);
+  return row?.code ?? null;
 }
 
 /**

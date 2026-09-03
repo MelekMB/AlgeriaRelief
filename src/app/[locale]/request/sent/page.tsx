@@ -7,10 +7,10 @@ export default async function SentPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ unverified?: string }>;
+  searchParams: Promise<{ unverified?: string; ref?: string }>;
 }) {
   const { locale } = await params;
-  const { unverified } = await searchParams;
+  const { unverified, ref } = await searchParams;
   setRequestLocale(locale);
 
   const t = await getTranslations('sent');
@@ -22,6 +22,16 @@ export default async function SentPage({
       <h1 className="text-2xl font-bold text-brand">{t('title')}</h1>
       <p className="text-base">{t('body')}</p>
       <p className="text-sm text-muted">{t('expires')}</p>
+
+      {ref && (
+        <div className="rounded-xl border-2 border-brand bg-surface p-4 text-center">
+          <p className="text-sm font-semibold">{t('referenceTitle')}</p>
+          <p className="mt-1 font-mono text-4xl font-bold tracking-widest text-brand">
+            <bdi>{ref}</bdi>
+          </p>
+          <p className="mt-2 text-sm text-muted">{t('referenceHint')}</p>
+        </div>
+      )}
 
       {unverified === '1' && (
         <p className="rounded-lg border border-border bg-surface p-3 text-sm">{t('unverified')}</p>

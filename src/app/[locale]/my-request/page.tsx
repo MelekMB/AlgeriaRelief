@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
-import { getOwnConfirmCode, getOwnRequest } from '@/lib/requests';
+import { getOwnConfirmCode, getOwnManageCode, getOwnRequest } from '@/lib/requests';
 import { getSession } from '@/lib/session';
 import ManageRequestForm from '@/components/ManageRequestForm';
 import { signOutAction } from './actions';
@@ -46,6 +46,7 @@ export default async function MyRequestPage({
   }
 
   const code = await getOwnConfirmCode(own.id, session.personId);
+  const reference = await getOwnManageCode(own.id, session.personId);
 
   const statusLabel =
     own.status === 'claimed'
@@ -85,6 +86,12 @@ export default async function MyRequestPage({
           </p>
           <p className="mt-2 text-sm text-muted">{t('yourCodeHint')}</p>
         </div>
+      )}
+
+      {reference && (
+        <p className="rounded-lg border border-border bg-surface p-3 text-sm">
+          {t('reference')}: <bdi className="font-mono font-bold">{reference}</bdi>
+        </p>
       )}
 
       <ManageRequestForm locale={locale} requestId={own.id} />

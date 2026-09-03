@@ -1,6 +1,8 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import SigninForm from '@/components/SigninForm';
+import { smsConfigured } from '@/lib/sms';
+import { whatsappConfigured } from '@/lib/whatsapp';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +32,11 @@ export default async function SigninPage({
         </Link>
       </div>
       <p className="text-sm text-muted">{t('needVerify')}</p>
-      <SigninForm locale={locale} next={next ?? '/needs'} />
+      <SigninForm
+        locale={locale}
+        next={next ?? '/needs'}
+        useReference={!smsConfigured() && !whatsappConfigured()}
+      />
     </main>
   );
 }

@@ -6,10 +6,13 @@ import { clearPending, getPending, setPending } from '@/lib/pendingVerification'
 import { upsertPerson } from '@/lib/people';
 import { whatsappConfigured, whatsappVerifyLink } from '@/lib/whatsapp';
 import { parseAlgerianMobile } from '@/lib/phone';
+import { hashToken } from '@/lib/crypto';
+import { findByReference } from '@/lib/requests';
+import { smsConfigured } from '@/lib/sms';
 import { setSession } from '@/lib/session';
 
 export type SigninState = {
-  step: 'phone' | 'code' | 'whatsapp';
+  step: 'phone' | 'code' | 'whatsapp' | 'reference';
   phone?: string;
   error?: string;
   devCode?: string;
@@ -31,6 +34,27 @@ export async function signinAction(
   const locale = String(formData.get('locale') ?? 'ar');
   const next = String(formData.get('next') ?? '/needs');
   const intent = String(formData.get('intent') ?? 'send');
+
+  const canVerify = smsConfigured() || whatsappConfigured();
+
+  // No verification channel at all: the reference code shown when the request
+  // was posted is the way back in. Knowing someone's phone number alone must
+  // never be enough - otherwise anyone could open a stranger's request, read
+  // their door code, or close it on them.
+  if (!canVerify) {
+    const parsed = parseAlgerianMobile(String(formData.get('phone') ?? ''));
+    if (!parsed.ok) return { step: 'reference', error: 'phone' };
+
+    const reference = String(formData.get('reference') ?? '').trim();
+    if (!reference) return { step: 'reference', error: 'notFound' };
+
+    const personId = await findByReference(hashToken(parsed.e164), reference);
+    if (!personId) return { step: 'reference', error: 'notFound' };
+
+    await setSession(personId);
+    const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/my-request';
+    redirect(`/${locale}${safeNext}`);
+  }
 
   if (intent === 'send') {
     const parsed = parseAlgerianMobile(String(formData.get('phone') ?? ''));

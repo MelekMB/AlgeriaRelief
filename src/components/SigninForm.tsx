@@ -8,14 +8,23 @@ import {
   type SigninState,
 } from '@/app/[locale]/signin/actions';
 
-export default function SigninForm({ locale, next }: { locale: string; next: string }) {
+export default function SigninForm({
+  locale,
+  next,
+  useReference,
+}: {
+  locale: string;
+  next: string;
+  useReference: boolean;
+}) {
   const t = useTranslations('form');
   const tv = useTranslations('verify');
   const tc = useTranslations('common');
   const te = useTranslations('formErrors');
 
+  const ts = useTranslations('signin');
   const [state, formAction, pending] = useActionState<SigninState, FormData>(signinAction, {
-    step: 'phone',
+    step: useReference ? 'reference' : 'phone',
   });
 
   const onCodeStep = state.step === 'code';
@@ -96,11 +105,45 @@ export default function SigninForm({ locale, next }: { locale: string; next: str
           role="alert"
           className="rounded-lg border border-danger/40 bg-danger-surface p-3 text-sm font-semibold text-danger"
         >
-          {onCodeStep ? tv(state.error) : te(state.error)}
+          {useReference && state.error === 'notFound'
+            ? ts('notFound')
+            : onCodeStep
+              ? tv(state.error)
+              : te(state.error)}
         </p>
       )}
 
-      {!onCodeStep ? (
+      {useReference ? (
+        <>
+          <label className="text-sm font-semibold" htmlFor="phone">
+            {t('phone')}
+          </label>
+          <input
+            id="phone"
+            name="phone"
+            type="tel"
+            inputMode="numeric"
+            autoComplete="tel"
+            placeholder={t('phonePlaceholder')}
+            required
+            className="min-h-14 w-full rounded-lg border border-border bg-bg px-3 font-mono text-lg"
+          />
+
+          <label className="text-sm font-semibold" htmlFor="reference">
+            {ts('referenceLabel')}
+          </label>
+          <input
+            id="reference"
+            name="reference"
+            inputMode="numeric"
+            maxLength={6}
+            required
+            placeholder="123456"
+            className="min-h-14 w-full rounded-lg border border-border bg-bg px-3 text-center font-mono text-2xl tracking-widest"
+          />
+          <p className="text-sm text-muted">{ts('referenceHint')}</p>
+        </>
+      ) : !onCodeStep ? (
         <>
           <label className="text-sm font-semibold" htmlFor="phone">
             {t('phone')}

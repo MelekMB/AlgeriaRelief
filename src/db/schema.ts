@@ -158,6 +158,10 @@ export const requests = pgTable(
     claimedAt: timestamp('claimed_at', { withTimezone: true }),
     claimExpiresAt: timestamp('claim_expires_at', { withTimezone: true }),
     confirmCode: varchar('confirm_code', { length: 8 }), // 4 digits, read aloud at the door
+    // Shown once to the poster. Lets them return to their own request from
+    // another device without a verification SMS, and stops anyone who merely
+    // knows their phone number from taking it over.
+    manageCode: varchar('manage_code', { length: 8 }),
 
     status: requestStatusEnum('status').notNull().default('open'),
 

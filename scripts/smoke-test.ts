@@ -78,7 +78,7 @@ async function main() {
   const donorB = await upsertPerson(PHONES[2]!, { verified: true });
   check('created three verified people', Boolean(requester && donorA && donorB));
 
-  const requestId = await createRequest({
+  const createdRequest = await createRequest({
     personId: requester,
     categoryCode: 'water_food',
     communeId: commune.id,
@@ -92,8 +92,10 @@ async function main() {
     dedupeFingerprint: `smoke-${Date.now()}`,
     shadowed: false,
   });
-  check('created a request', Boolean(requestId));
-  if (!requestId) throw new Error('request creation failed');
+  check('created a request', Boolean(createdRequest));
+  if (!createdRequest) throw new Error('request creation failed');
+  const requestId = createdRequest.id;
+  check('request has a reference code', /^\d{6}$/.test(createdRequest.manageCode));
 
   // --- the address must not be readable before anyone claims ---
   check(
@@ -150,7 +152,7 @@ async function main() {
   check('donor delivery count incremented', (donorRow?.deliveries ?? 0) >= 1);
 
   // --- the lapse sweeper ---
-  const lapseId = await createRequest({
+  const lapse = await createRequest({
     personId: requester,
     categoryCode: 'water_food',
     communeId: commune.id,
@@ -165,12 +167,13 @@ async function main() {
     shadowed: false,
   });
 
-  await claimRequest(lapseId!, donorB);
+  const lapseId = lapse!.id;
+  await claimRequest(lapseId, donorB);
   // Push the claim into the past so the sweeper sees it as lapsed.
   await db
     .update(requests)
     .set({ claimExpiresAt: new Date(Date.now() - 60_000) })
-    .where(eq(requests.id, lapseId!));
+    .where(eq(requests.id, lapseId));
 
   const released = await releaseExpiredClaims();
   check('sweeper released the lapsed claim', released >= 1, `released=${released}`);
@@ -178,7 +181,7 @@ async function main() {
   const [reopened] = await db
     .select({ status: requests.status, claimedBy: requests.claimedByPersonId })
     .from(requests)
-    .where(eq(requests.id, lapseId!));
+    .where(eq(requests.id, lapseId));
   check('lapsed request returned to the pool', reopened?.status === 'open');
   check('claim was cleared', reopened?.claimedBy === null);
 
