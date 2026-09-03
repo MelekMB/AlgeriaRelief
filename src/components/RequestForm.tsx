@@ -19,10 +19,12 @@ export default function RequestForm({
   locale,
   categories,
   wilayas,
+  allowHomeDelivery,
 }: {
   locale: string;
   categories: Option[];
   wilayas: Option[];
+  allowHomeDelivery: boolean;
 }) {
   const t = useTranslations('form');
   const tc = useTranslations('common');
@@ -236,18 +238,24 @@ export default function RequestForm({
             <span className="mt-1 block text-sm text-muted">{t('deliveryLandmarkHint')}</span>
           </label>
 
-          <label className={`rounded-xl border-2 p-3 ${deliveryPoint === 'home' ? 'border-brand' : 'border-border'}`}>
-            <input
-              type="radio"
-              name="deliveryPoint"
-              value="home"
-              checked={deliveryPoint === 'home'}
-              onChange={() => setDeliveryPoint('home')}
-              className="me-2"
-            />
-            <span className="font-semibold">{t('deliveryHome')}</span>
-            <span className="mt-1 block text-sm text-muted">{t('deliveryHomeHint')}</span>
-          </label>
+          {allowHomeDelivery ? (
+            <label className={`rounded-xl border-2 p-3 ${deliveryPoint === 'home' ? 'border-brand' : 'border-border'}`}>
+              <input
+                type="radio"
+                name="deliveryPoint"
+                value="home"
+                checked={deliveryPoint === 'home'}
+                onChange={() => setDeliveryPoint('home')}
+                className="me-2"
+              />
+              <span className="font-semibold">{t('deliveryHome')}</span>
+              <span className="mt-1 block text-sm text-muted">{t('deliveryHomeHint')}</span>
+            </label>
+          ) : (
+            <p className="rounded-lg border border-border bg-surface p-3 text-sm text-muted">
+              {t('landmarkOnlyNotice')}
+            </p>
+          )}
         </div>
 
         {deliveryPoint === 'landmark' ? (

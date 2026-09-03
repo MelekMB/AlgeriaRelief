@@ -27,6 +27,8 @@ export async function claimAction(_prev: ClaimState, formData: FormData): Promis
       trip_full: 'tripFull',
       different_wilaya: 'differentWilaya',
       own_request: 'ownRequest',
+      daily_cap: 'dailyCap',
+      home_needs_verify: 'homeNeedsVerify',
     };
     return { error: map[result.reason] ?? 'notFound' };
   }

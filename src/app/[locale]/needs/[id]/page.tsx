@@ -1,7 +1,11 @@
 import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
-import { CLAIM_WINDOW_HOURS, MAX_REQUESTS_PER_TRIP } from '@/lib/claims';
+import {
+  CLAIM_WINDOW_HOURS,
+  MAX_REQUESTS_PER_TRIP,
+  UNVERIFIED_DAILY_CLAIM_CAP,
+} from '@/lib/claims';
 import { getPublicRequest } from '@/lib/requests';
 import ClaimButton from '@/components/ClaimButton';
 import FlagButton from '@/components/FlagButton';
@@ -78,6 +82,7 @@ export default async function NeedDetailPage({
           requestId={row.id}
           claimHours={CLAIM_WINDOW_HOURS}
           maxPerTrip={MAX_REQUESTS_PER_TRIP}
+          dailyCap={UNVERIFIED_DAILY_CLAIM_CAP}
         />
       ) : (
         <p className="rounded-lg border border-border bg-surface p-3 text-sm font-semibold">

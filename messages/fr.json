@@ -36,7 +36,8 @@
     "safetyTitle": "Règles de sécurité",
     "safetyNoMoney": "Cette plateforme ne demande jamais d'argent. N'envoyez jamais d'argent à qui que ce soit ici.",
     "safetyMeet": "Vous pouvez choisir un lieu public de rendez-vous au lieu de votre adresse.",
-    "safetyVerify": "Nous ne vérifions pas l'identité des personnes. Restez prudent."
+    "safetyVerify": "Nous ne vérifions pas l'identité des personnes. Restez prudent.",
+    "noVerification": "Attention : la vérification des numéros n'est pas activée. Personne n'est vérifié. Rencontrez-vous toujours dans un lieu public et n'envoyez jamais d'argent."
   },
   "categories": {
     "water_food": "Eau et nourriture",
@@ -86,7 +87,8 @@
     "phonePlaceholder": "0555 12 34 56",
     "phoneHint": "Nous envoyons un code de confirmation. Votre numéro n'est jamais public. Hors d'Algérie ? Écrivez le numéro avec l'indicatif, ex. +33.",
     "submit": "Publier la demande",
-    "moreDetail": "Plus de détails"
+    "moreDetail": "Plus de détails",
+    "landmarkOnlyNotice": "La livraison à domicile est indisponible : la vérification des numéros n'est pas activée. Choisissez un lieu public — c'est de toute façon le plus sûr."
   },
   "formErrors": {
     "category": "Choisissez un type d'aide.",
@@ -151,7 +153,9 @@
     "ownRequest": "Vous ne pouvez pas réserver votre propre demande.",
     "tripFull": "Votre trajet est complet ({max} demandes).",
     "differentWilaya": "Cette demande est dans une autre wilaya que votre trajet en cours.",
-    "suspended": "Votre compte est suspendu."
+    "suspended": "Votre compte est suspendu.",
+    "dailyCap": "Limite quotidienne atteinte ({cap} demandes). Réessayez demain.",
+    "homeNeedsVerify": "Cette demande exige un numéro vérifié car la livraison est à domicile."
   },
   "trip": {
     "title": "Votre trajet",

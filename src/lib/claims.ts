@@ -3,6 +3,7 @@ import { db } from '@/db';
 import {
   categories as categoriesTable,
   communes,
+  contactReveals,
   people,
   requests,
   tripRequests,
@@ -10,6 +11,7 @@ import {
 } from '@/db/schema';
 import { numericCode, safeEqual } from './crypto';
 import { getPerson, isVerified } from './people';
+import { smsConfigured } from './sms';
 import { notifyRequesterOfClaim } from './requests';
 
 /**
@@ -24,6 +26,15 @@ import { notifyRequesterOfClaim } from './requests';
 export const CLAIM_WINDOW_HOURS = Number(process.env.CLAIM_WINDOW_HOURS ?? 6);
 export const MAX_REQUESTS_PER_TRIP = 5;
 
+/**
+ * How many requests one unverified person may claim per day.
+ *
+ * Only applies when there is no verification channel configured at all. It is
+ * the stand-in for phone verification: someone collecting contact details has
+ * to come back day after day instead of harvesting the board in one sitting.
+ */
+export const UNVERIFIED_DAILY_CLAIM_CAP = 3;
+
 export type ClaimResult =
   | { ok: true; requestId: number; tripId: number; claimExpiresAt: Date }
   | {
@@ -35,21 +46,40 @@ export type ClaimResult =
         | 'not_found'
         | 'trip_full'
         | 'different_wilaya'
-        | 'own_request';
+        | 'own_request'
+        | 'daily_cap'
+        | 'home_needs_verify';
     };
 
 export async function claimRequest(requestId: number, personId: number): Promise<ClaimResult> {
   const person = await getPerson(personId);
   if (!person) return { ok: false, reason: 'not_found' };
   if (person.isSuspended) return { ok: false, reason: 'suspended' };
-  // Unverified people may post, but may never see anyone's address.
-  if (!isVerified(person)) return { ok: false, reason: 'not_verified' };
+
+  // When an SMS provider exists, verification is required - that is what
+  // protects a home address. With no provider at all, requiring it would mean
+  // nobody can ever deliver anything, so the app runs in a reduced mode:
+  // landmark meetings only, no home addresses, and a hard daily claim cap.
+  const canVerify = smsConfigured();
+
+  if (canVerify && !isVerified(person)) return { ok: false, reason: 'not_verified' };
+
+  if (!canVerify && !isVerified(person)) {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const [{ used }] = await db
+      .select({ used: sql<number>`count(*)::int` })
+      .from(contactReveals)
+      .where(and(eq(contactReveals.personId, personId), gt(contactReveals.revealedAt, since)));
+
+    if (Number(used) >= UNVERIFIED_DAILY_CLAIM_CAP) return { ok: false, reason: 'daily_cap' };
+  }
 
   const [target] = await db
     .select({
       id: requests.id,
       personId: requests.personId,
       communeId: requests.communeId,
+      deliveryPoint: requests.deliveryPoint,
       wilayaId: communes.wilayaId,
     })
     .from(requests)
@@ -59,6 +89,12 @@ export async function claimRequest(requestId: number, personId: number): Promise
 
   if (!target) return { ok: false, reason: 'not_found' };
   if (target.personId === personId) return { ok: false, reason: 'own_request' };
+
+  // A home address is only ever handed to a verified person, whatever mode
+  // the app is running in.
+  if (target.deliveryPoint === 'home' && !isVerified(person)) {
+    return { ok: false, reason: 'home_needs_verify' };
+  }
 
   // One open trip per donor. An existing trip may take more requests
   // (batching), but only within the same wilaya — this is a distance filter,

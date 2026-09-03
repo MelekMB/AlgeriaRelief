@@ -9,6 +9,7 @@ import { parseAlgerianMobile } from '@/lib/phone';
 import { createRequest, findDuplicate, hasOpenRequest } from '@/lib/requests';
 import { dedupeFingerprint, screenText } from '@/lib/screening';
 import { writesBlocked } from '@/lib/settings';
+import { smsConfigured } from '@/lib/sms';
 
 export type SubmitState = {
   error?: string;
@@ -29,9 +30,14 @@ export async function submitRequest(
   const body = String(formData.get('body') ?? '').trim();
   const urgency = String(formData.get('urgency') ?? 'normal') as RequestDraft['urgency'];
   const beneficiary = String(formData.get('beneficiary') ?? 'self') as RequestDraft['beneficiary'];
-  const deliveryPoint = String(
+  // With no verification channel there is no safe way to hand a stranger a
+  // home address, so the app collects landmark meeting points only.
+  const requestedDeliveryPoint = String(
     formData.get('deliveryPoint') ?? 'landmark',
   ) as RequestDraft['deliveryPoint'];
+  const deliveryPoint: RequestDraft['deliveryPoint'] = smsConfigured()
+    ? requestedDeliveryPoint
+    : 'landmark';
   const address = String(formData.get('address') ?? '').trim();
   const landmarkHint = String(formData.get('landmarkHint') ?? '').trim();
   const phone = String(formData.get('phone') ?? '').trim();

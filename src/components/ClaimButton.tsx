@@ -9,11 +9,13 @@ export default function ClaimButton({
   requestId,
   claimHours,
   maxPerTrip,
+  dailyCap,
 }: {
   locale: string;
   requestId: number;
   claimHours: number;
   maxPerTrip: number;
+  dailyCap: number;
 }) {
   const t = useTranslations('detail');
   const tc = useTranslations('common');
@@ -29,7 +31,7 @@ export default function ClaimButton({
           role="alert"
           className="rounded-lg border border-danger/40 bg-danger-surface p-3 text-sm font-semibold text-danger"
         >
-          {t(state.error, { max: maxPerTrip })}
+          {t(state.error, { max: maxPerTrip, cap: dailyCap })}
         </p>
       )}
 

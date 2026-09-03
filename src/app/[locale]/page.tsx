@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import type { Locale } from '@/i18n/routing';
 import { deliveryStats } from '@/lib/jobs';
+import { smsConfigured } from '@/lib/sms';
 import EmergencyBanner from '@/components/EmergencyBanner';
 import LanguageToggle from '@/components/LanguageToggle';
 
@@ -35,6 +36,14 @@ export default async function HomePage({
       <EmergencyBanner />
 
       <p className="text-base text-muted">{t('subtitle')}</p>
+
+      {/* People must know nobody has been verified before they act on a
+          listing. Saying it once, plainly, near the top. */}
+      {!smsConfigured() && (
+        <p className="rounded-xl border border-border bg-surface p-3 text-sm">
+          {t('noVerification')}
+        </p>
+      )}
 
       {/* Two doors and nothing else. No hero copy, no carousel. */}
       <nav aria-label={t('title')} className="flex flex-col gap-4">

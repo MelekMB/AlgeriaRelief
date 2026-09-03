@@ -549,3 +549,17 @@ On the "should I use Replit instead" question: answered without defensiveness �
 **SMS cost.** Added `npm run sms:test` to check credentials and carrier delivery in isolation, naming the trial-account restriction that only verified numbers receive messages. Then applied the main cost lever in code: **`SMS_VERIFY_REQUESTERS=false` by default**, so requesters no longer consume an SMS. Verifying the vulnerable side buys little — their post reveals nothing until a donor claims — while the control that matters (an address requires a verified phone) is on the donor side and is untouched. Spend now scales with donors, not requests.
 
 **WhatsApp OTP.** Explained honestly that it is neither free nor instant: outbound authentication templates are billed per country, and setup needs Meta Business verification. The genuinely free variant is **user-initiated** — a `wa.me` link with the code pre-filled, sent by the user to our number, matched by a webhook, since inbound messages are free — which is also better UX and sidesteps `+213` carrier delivery risk entirely.
+
+**Chunk 52 — Meta blocked on SMS; built a no-SMS mode so the app works for free.** Omar could not receive Meta's developer-registration SMS on either number after repeated attempts. Before advising, re-checked Meta's current docs by web search rather than memory and found **my earlier steps were out of date**: app creation is now "Create App -> use case **Connect with customers through WhatsApp** -> select or create a **business portfolio**", there is no "Business" app type. Also confirmed the test number reaches **only 5 manually-added recipients**, and that business verification is not needed to start (an unverified WABA can reach up to 250 unique recipients per 24h).
+
+With Meta blocked on something outside our control, and Twilio/Meta having between them consumed a day while the app sat finished, changed approach: **make the app fully usable with no SMS provider at all.**
+
+Reasoning: verification gates claiming because claiming reveals a **home address**. Remove home addresses and the risk it protects against largely disappears. So when no SMS provider is configured the app now runs in a reduced mode:
+- **Landmark meetings only.** The "deliver to my home" option is hidden in the form and coerced server-side, so no home address is ever collected.
+- **Unverified people may claim**, capped at `UNVERIFIED_DAILY_CLAIM_CAP = 3` per 24h, counted from `contact_reveals`. That cap is the stand-in for verification: anyone collecting contact details has to come back day after day instead of harvesting the board in one sitting.
+- **A home-delivery request always requires a verified phone**, whatever mode is active — so any request created earlier with an address stays protected.
+- **The home page says plainly that nobody is verified**, in both languages, with the advice to meet in public and never send money.
+
+Everything else is untouched: the claim lock, one trip per donor, no-show tracking, screening, auto-quarantine. When an SMS provider is later configured, full verification returns automatically with no code change.
+
+213 locale keys in both languages, tests green, build green (26 pages).

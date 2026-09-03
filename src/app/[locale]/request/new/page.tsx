@@ -4,6 +4,7 @@ import { FIRE_PRONE_WILAYA_CODES, WILAYAS } from '@/data/wilayas';
 import { Link } from '@/i18n/routing';
 import EmergencyBanner from '@/components/EmergencyBanner';
 import RequestForm from '@/components/RequestForm';
+import { smsConfigured } from '@/lib/sms';
 
 export default async function NewRequestPage({
   params,
@@ -43,6 +44,7 @@ export default async function NewRequestPage({
       <EmergencyBanner />
 
       <RequestForm
+        allowHomeDelivery={smsConfigured()}
         locale={locale}
         categories={categoryRows.map((c) => ({
           code: c.code,
