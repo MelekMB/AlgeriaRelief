@@ -36,6 +36,15 @@ const web = spawn('next', ['start', '-H', '0.0.0.0', '-p', port], {
 const background = [];
 
 setTimeout(() => {
+  // The deployment has its own database, so a column added since the last
+  // deploy is missing here even when the workspace is up to date. Repair it
+  // before anything tries to use it.
+  console.log('[start] checking database schema...');
+  const schema = spawnSync('npm', ['run', 'db:ensure'], { stdio: 'inherit', shell: true });
+  if (schema.status !== 0) {
+    console.warn('[start] schema check reported problems - continuing.');
+  }
+
   console.log('[start] seeding reference data...');
   const seed = spawnSync('npm', ['run', 'seed:geo'], { stdio: 'inherit', shell: true });
   if (seed.status !== 0) {

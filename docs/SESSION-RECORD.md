@@ -609,3 +609,11 @@ Fix: the door code is now generated **with the request**, so the person asking f
 Now two distinct codes, with distinct jobs: the **6-digit reference** is a secret used to get back into your own request from another device, and the **4-digit door code** is spoken aloud to the donor at handover. Neither needs SMS.
 
 231 locale keys in both languages, tests green, build green (26 pages).
+
+**Chunk 56 — Server-side exception on posting: the production database was missing the new column.** Omar hit "Application error: a server-side exception has occurred" (digest 856320088) when creating a request.
+
+Cause, and it was my instruction that was wrong: I told him to run `npm run db:push`, but that runs against the **workspace** database. The Replit deployment has its **own** production database, so `requests.manage_code` — added the same turn — never existed there, and every insert threw.
+
+Fix so this class of problem cannot recur: `scripts/ensure-schema.ts` (`npm run db:ensure`), run automatically from `start.mjs` on every production boot, just before seeding. Every statement is idempotent — `ADD COLUMN IF NOT EXISTS`, `CREATE TABLE IF NOT EXISTS` — touching no data and making no destructive change, so it is safe on every restart. It currently covers `requests.manage_code`, `requests.confirm_code`, `requests.still_needed_asked_at`, `people.no_show_count` and the `settings` table. A failure logs loudly but does not stop the server.
+
+This is not a substitute for real migrations; it is the small safe subset that lets a deployment repair its own schema without anyone needing a production connection string. Together with the existing self-seeding, a deploy now brings its own database fully up to date on its own.
