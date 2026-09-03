@@ -115,6 +115,7 @@ export default function SigninForm({
 
       {useReference ? (
         <>
+          <h2 className="text-base font-bold">{ts('deliverTitle')}</h2>
           <label className="text-sm font-semibold" htmlFor="phone">
             {t('phone')}
           </label>
@@ -129,19 +130,26 @@ export default function SigninForm({
             className="min-h-14 w-full rounded-lg border border-border bg-bg px-3 font-mono text-lg"
           />
 
-          <label className="text-sm font-semibold" htmlFor="reference">
-            {ts('referenceLabel')}
-          </label>
-          <input
-            id="reference"
-            name="reference"
-            inputMode="numeric"
-            maxLength={6}
-            required
-            placeholder="123456"
-            className="min-h-14 w-full rounded-lg border border-border bg-bg px-3 text-center font-mono text-2xl tracking-widest"
-          />
-          <p className="text-sm text-muted">{ts('referenceHint')}</p>
+          <p className="text-sm text-muted">{ts('deliverHint')}</p>
+
+          {/* Only people who posted a request have this. Donors leave it
+              empty and get a session that can deliver but cannot open
+              anybody's request. */}
+          <div className="mt-2 border-t border-border pt-4">
+            <h2 className="text-sm font-bold">{ts('haveRequestTitle')}</h2>
+            <label className="mt-2 block text-sm font-semibold" htmlFor="reference">
+              {ts('referenceOptional')}
+            </label>
+            <input
+              id="reference"
+              name="reference"
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="123456"
+              className="mt-1 min-h-14 w-full rounded-lg border border-border bg-bg px-3 text-center font-mono text-2xl tracking-widest"
+            />
+            <p className="mt-1 text-sm text-muted">{ts('referenceHint')}</p>
+          </div>
         </>
       ) : !onCodeStep ? (
         <>

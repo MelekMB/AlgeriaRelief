@@ -46,13 +46,22 @@ export async function signinAction(
     if (!parsed.ok) return { step: 'reference', error: 'phone' };
 
     const reference = String(formData.get('reference') ?? '').trim();
-    if (!reference) return { step: 'reference', error: 'notFound' };
 
-    const personId = await findByReference(hashToken(parsed.e164), reference);
-    if (!personId) return { step: 'reference', error: 'notFound' };
+    if (reference) {
+      // Claiming a request they posted: the code proves it is theirs.
+      const personId = await findByReference(hashToken(parsed.e164), reference);
+      if (!personId) return { step: 'reference', error: 'notFound' };
 
-    await setSession(personId);
-    const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/my-request';
+      await setSession(personId, 'full');
+      const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/my-request';
+      redirect(`/${locale}${safeNext}`);
+    }
+
+    // Just here to deliver. A phone number is all that is needed to offer
+    // help, and this session deliberately cannot open anyone's request.
+    const personId = await upsertPerson(parsed.e164, { verified: false });
+    await setSession(personId, 'claim');
+    const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/needs';
     redirect(`/${locale}${safeNext}`);
   }
 

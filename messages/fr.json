@@ -272,6 +272,10 @@
     "referenceLabel": "Code de la demande",
     "referenceHint": "Le code à 6 chiffres affiché lors de la publication.",
     "notFound": "Numéro ou code incorrect.",
-    "title": "Accéder à votre demande"
+    "title": "Accéder à votre demande",
+    "deliverTitle": "Entrez votre numéro pour continuer",
+    "deliverHint": "Votre numéro n'est visible que par la famille à qui vous livrez, jamais publiquement.",
+    "haveRequestTitle": "Vous avez publié une demande et voulez la rouvrir ?",
+    "referenceOptional": "Code de la demande (facultatif)"
   }
 }

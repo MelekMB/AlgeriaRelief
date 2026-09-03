@@ -17,7 +17,9 @@ export default async function MyRequestPage({
   setRequestLocale(locale);
 
   const session = await getSession();
-  if (!session) redirect(`/${locale}/signin?next=/my-request`);
+  // A claim-only session must not open a request: it proves nothing beyond
+  // having typed a phone number.
+  if (!session || session.scope !== 'full') redirect(`/${locale}/signin?next=/my-request`);
 
   const t = await getTranslations('myRequest');
   const tc = await getTranslations('common');

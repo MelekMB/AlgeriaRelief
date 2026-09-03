@@ -617,3 +617,17 @@ Cause, and it was my instruction that was wrong: I told him to run `npm run db:p
 Fix so this class of problem cannot recur: `scripts/ensure-schema.ts` (`npm run db:ensure`), run automatically from `start.mjs` on every production boot, just before seeding. Every statement is idempotent — `ADD COLUMN IF NOT EXISTS`, `CREATE TABLE IF NOT EXISTS` — touching no data and making no destructive change, so it is safe on every restart. It currently covers `requests.manage_code`, `requests.confirm_code`, `requests.still_needed_asked_at`, `people.no_show_count` and the `settings` table. A failure logs loudly but does not stop the server.
 
 This is not a substitute for real migrations; it is the small safe subset that lets a deployment repair its own schema without anyone needing a production connection string. Together with the existing self-seeding, a deploy now brings its own database fully up to date on its own.
+
+**Chunk 57 — Donors could not sign in at all: a hole I created.** Omar asked how someone who only wants to deliver obtains a code. The question exposed a genuine logic error from the previous change: I had made sign-in require the 6-digit reference code, but **a donor never posted a request and therefore has no reference code**. `findByReference` could never match for them, so donors could not obtain a session, could not claim, and the entire delivery side was blocked. Fixing the requester path had broken the donor path.
+
+Root of the mistake: conflating two different needs. A requester returning to their own request must **prove ownership**, because otherwise anyone knowing their phone number could read their door code or close their request. A donor has nothing to prove — with verification removed, they only need an identity so the family can call them.
+
+Fix: sessions now carry a **scope**.
+- `full` — verified, or gave the reference code for their own request. May open and manage that request.
+- `claim` — typed a phone number and nothing more. May offer a delivery; may **never** open anyone's request, read a door code, or close one.
+
+`/my-request` now requires `full` and redirects otherwise. Sessions issued before scopes existed belonged to posters and are treated as `full`.
+
+The sign-in form makes the reference **optional**: "enter your number to continue" for donors, with a separate section below for "did you post a request and want to open it?". Leave it blank and you get a claim-only session; fill it correctly and you get a full one.
+
+235 locale keys in both languages, tests green, build green.
