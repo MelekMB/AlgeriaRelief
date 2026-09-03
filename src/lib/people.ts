@@ -69,3 +69,19 @@ export function flagWeight(person: PersonRecord): number {
   if (person.upheldFlagsCount > 0) return 1;
   return 1 + Math.min(person.deliveriesCount + person.receivedCount, 5);
 }
+
+/**
+ * Marks an already-known number verified.
+ *
+ * Used by manual approval, where the operator has seen the code arrive on
+ * WhatsApp but the app never learns the number in plaintext.
+ */
+export async function markVerifiedByPhoneHash(phoneHash: string): Promise<boolean> {
+  const updated = await db
+    .update(people)
+    .set({ phoneVerifiedAt: new Date(), lastSeenAt: new Date() })
+    .where(eq(people.phoneHash, phoneHash))
+    .returning({ id: people.id });
+
+  return updated.length > 0;
+}

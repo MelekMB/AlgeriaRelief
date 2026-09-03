@@ -160,6 +160,11 @@ export async function issueCodeOnly(
     expiresAt: new Date(now.getTime() + CODE_TTL_MINUTES * 60 * 1000),
   });
 
+  // Create the person up front, still unverified. Approval - whether from the
+  // webhook or by hand - then only has to flip a flag, and no plaintext
+  // number needs storing anywhere extra.
+  await upsertPerson(parsed.e164, { verified: false });
+
   return { ok: true, code, e164: parsed.e164 };
 }
 

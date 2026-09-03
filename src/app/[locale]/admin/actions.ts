@@ -7,6 +7,7 @@ import { db } from '@/db';
 import { auditLog, requests } from '@/db/schema';
 import { safeEqual, sign, unsign } from '@/lib/crypto';
 import { KEYS, setSetting } from '@/lib/settings';
+import { approveCodeManually } from '@/lib/whatsapp';
 
 const ADMIN_COOKIE = 'ar_admin';
 
@@ -66,6 +67,17 @@ export async function settingsAction(formData: FormData): Promise<void> {
       action: 'set_throttle',
       metadata: codes,
     });
+  }
+
+  if (intent === 'approve_code') {
+    const code = String(formData.get('code') ?? '').trim();
+    if (code) {
+      const result = await approveCodeManually(code);
+      await db.insert(auditLog).values({
+        actor: 'admin',
+        action: result.ok ? 'manual_verify' : 'manual_verify_failed',
+      });
+    }
   }
 
   if (intent === 'keep' || intent === 'remove') {

@@ -108,3 +108,43 @@ export function extractCode(text: string, length: number): string | null {
   const match = text.match(new RegExp(`\\b\\d{${length}}\\b`));
   return match ? match[0] : null;
 }
+
+/**
+ * Approve a code by hand.
+ *
+ * A stop-gap for running before the Meta webhook exists: the operator reads
+ * the code out of their own WhatsApp and types it in. It does exactly what
+ * the webhook does - consume the code and verify the number it was issued to
+ * - so switching to the automated path later changes nothing for users.
+ *
+ * Only reachable from the password-protected admin page.
+ */
+export async function approveCodeManually(
+  code: string,
+): Promise<{ ok: true } | { ok: false; reason: 'not_found' }> {
+  const { and, desc, eq, gt, isNull } = await import('drizzle-orm');
+  const { db } = await import('@/db');
+  const { otpCodes } = await import('@/db/schema');
+  const { hashToken } = await import('./crypto');
+  const { markVerifiedByPhoneHash } = await import('./people');
+
+  const [row] = await db
+    .select()
+    .from(otpCodes)
+    .where(
+      and(
+        eq(otpCodes.codeHash, hashToken(code.trim())),
+        isNull(otpCodes.consumedAt),
+        gt(otpCodes.expiresAt, new Date()),
+      ),
+    )
+    .orderBy(desc(otpCodes.createdAt))
+    .limit(1);
+
+  if (!row) return { ok: false, reason: 'not_found' };
+
+  await db.update(otpCodes).set({ consumedAt: new Date() }).where(eq(otpCodes.id, row.id));
+  await markVerifiedByPhoneHash(row.phoneHash);
+
+  return { ok: true };
+}

@@ -563,3 +563,22 @@ Reasoning: verification gates claiming because claiming reveals a **home address
 Everything else is untouched: the claim lock, one trip per donor, no-show tracking, screening, auto-quarantine. When an SMS provider is later configured, full verification returns automatically with no code change.
 
 213 locale keys in both languages, tests green, build green (26 pages).
+
+**Chunk 53 — Free WhatsApp verification built; manual bridge added for the Meta blocker.** Omar could not receive Meta's developer-registration SMS on either number, asked whether his business number **+971521312164** could be used, and what verifying **100,000** numbers would cost — stressing this is a volunteer platform that must be as close to free as possible.
+
+Checked current pricing by search rather than memory. Confirmed: platform access is free, **incoming user-initiated messages are free**, while outbound authentication templates have been billed **per message per country** since July 2025 (US ~$0.004, India ~$0.0014, parts of Europe $0.05+).
+
+Cost comparison given to him for 100k verifications: SMS to Algeria ~**$8,000**; WhatsApp outbound templates ~$1,000-5,000; **WhatsApp inbound $0**. Also reframed the number itself — since `SMS_VERIFY_REQUESTERS=false`, requesters never verify, so 100k families cost nothing and only donors who actually claim consume a verification.
+
+**Built the inbound design.** The app never sends a WhatsApp message: it shows a code, the user taps a button that opens WhatsApp with the code pre-filled to the business number, and the webhook receives it.
+- `src/lib/whatsapp.ts` - config, `wa.me` link builder, HMAC signature check, envelope parser, code extractor.
+- `src/app/api/whatsapp/route.ts` - Meta's GET handshake plus inbound POST. **Callbacks without a valid `x-hub-signature-256` are refused**, because a forged one would let anyone mark a number as verified. A code verifies only when it arrives **from the number it was issued to** — code alone is insufficient.
+- `issueCodeOnly` in `otp.ts` creates a code without sending anything, and now also upserts the person as unverified so approval only has to flip a flag.
+- `pendingVerification.ts` holds the awaited code in an **encrypted per-browser cookie**, so polling cannot be used to piggyback on someone else's verification.
+- Sign-in UI gained a WhatsApp step that shows the code, the deep link, and polls every 3s.
+
+**The remaining blocker is Meta itself**, which cannot be worked around from code: the webhook requires an app he cannot yet create. Also flagged the real cost of the +971 number — it must move to the WhatsApp Business Platform and cannot stay on regular WhatsApp.
+
+So added a **manual approval bridge** that works today with no Meta at all: the user still taps the `wa.me` link and sends the code to his ordinary WhatsApp; he reads it and types it into a new box on `/admin`. `approveCodeManually` does exactly what the webhook does — consume the code, verify the number it was issued to — so switching to the automated path later changes nothing for users. Only reachable behind `ADMIN_PASSWORD`.
+
+221 locale keys in both languages, tests green, build green (26 pages).

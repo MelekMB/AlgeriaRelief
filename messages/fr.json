@@ -257,6 +257,9 @@
     "throttle": "Wilayas suspendues",
     "throttleHint": "Codes séparés par une virgule, ex. : 06,15",
     "save": "Enregistrer",
-    "saved": "Enregistré."
+    "saved": "Enregistré.",
+    "approveTitle": "Vérifier un numéro manuellement",
+    "approveHint": "Saisissez le code reçu sur WhatsApp ; le numéro de l'expéditeur sera vérifié.",
+    "approve": "Vérifier"
   }
 }

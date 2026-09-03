@@ -73,6 +73,34 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
         </form>
       </section>
 
+      {/* Bridge until the WhatsApp webhook exists: read the code out of your
+          own WhatsApp and type it here. Does exactly what the webhook does. */}
+      <section className="rounded-xl border border-border p-4">
+        <h2 className="text-base font-bold">{t('approveTitle')}</h2>
+        <p className="mt-1 text-sm text-muted">{t('approveHint')}</p>
+        <form action={settingsAction} className="mt-2 flex gap-2">
+          <input type="hidden" name="locale" value={locale} />
+          <input type="hidden" name="intent" value="approve_code" />
+          <label className="sr-only" htmlFor="approve-code">
+            {t('approveTitle')}
+          </label>
+          <input
+            id="approve-code"
+            name="code"
+            inputMode="numeric"
+            maxLength={6}
+            placeholder="123456"
+            className="min-h-12 flex-1 rounded-lg border border-border bg-bg px-3 text-center font-mono text-xl tracking-widest"
+          />
+          <button
+            type="submit"
+            className="min-h-12 rounded-lg bg-brand px-4 font-bold text-brand-contrast"
+          >
+            {t('approve')}
+          </button>
+        </form>
+      </section>
+
       <section className="rounded-xl border border-border p-4">
         <h2 className="text-base font-bold">{t('throttle')}</h2>
         <form action={settingsAction} className="mt-2 flex gap-2">
