@@ -375,3 +375,65 @@ export async function getActiveTripItems(
 
   return { tripId: trip.id, expiresAt: trip.expiresAt, items };
 }
+
+
+/**
+ * Give a claimed request back voluntarily.
+ *
+ * Someone who realises they cannot make the delivery should be able to free
+ * it immediately, so another donor can pick it up rather than the family
+ * waiting out the whole claim window for nothing.
+ *
+ * Deliberately does NOT count as a no-show. No-shows exist to catch people
+ * who take addresses and never appear; punishing someone for saying "I can't
+ * do this" would push them to stay silent instead, which is worse for the
+ * family.
+ */
+export async function releaseClaim(
+  requestId: number,
+  personId: number,
+): Promise<{ ok: boolean }> {
+  const released = await db
+    .update(requests)
+    .set({
+      status: 'open',
+      claimedByPersonId: null,
+      claimedAt: null,
+      claimExpiresAt: null,
+    })
+    .where(
+      and(
+        eq(requests.id, requestId),
+        eq(requests.claimedByPersonId, personId),
+        eq(requests.status, 'claimed'),
+      ),
+    )
+    .returning({ id: requests.id });
+
+  if (released.length === 0) return { ok: false };
+
+  await db.delete(tripRequests).where(eq(tripRequests.requestId, requestId));
+
+  // Close the trip once nothing is left on it, so the donor is free to claim
+  // elsewhere straight away.
+  const trip = await db
+    .select({ id: trips.id })
+    .from(trips)
+    .where(
+      and(eq(trips.donorPersonId, personId), eq(trips.status, 'claimed')),
+    )
+    .limit(1);
+
+  if (trip[0]) {
+    const [{ remaining }] = await db
+      .select({ remaining: sql<number>`count(*)::int` })
+      .from(tripRequests)
+      .where(eq(tripRequests.tripId, trip[0].id));
+
+    if (Number(remaining) === 0) {
+      await db.update(trips).set({ status: 'cancelled' }).where(eq(trips.id, trip[0].id));
+    }
+  }
+
+  return { ok: true };
+}

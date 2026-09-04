@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 import { useTranslations } from 'next-intl';
 import { claimAction, type ClaimState } from '@/app/[locale]/needs/[id]/actions';
+import { Link } from '@/i18n/routing';
 
 export default function ClaimButton({
   locale,
@@ -27,12 +28,20 @@ export default function ClaimButton({
       <input type="hidden" name="requestId" value={requestId} />
 
       {state.error && (
-        <p
+        <div
           role="alert"
           className="rounded-lg border border-danger/40 bg-danger-surface p-3 text-sm font-semibold text-danger"
         >
-          {t(state.error, { max: maxPerTrip, cap: dailyCap })}
-        </p>
+          <p>{t(state.error, { max: maxPerTrip, cap: dailyCap })}</p>
+
+          {/* These two are both "you already have a trip open", so the way
+              out is the trip page - where it can be released. */}
+          {(state.error === 'differentWilaya' || state.error === 'tripFull') && (
+            <Link href="/trip" className="mt-2 inline-block underline">
+              {t('seeTrip')}
+            </Link>
+          )}
+        </div>
       )}
 
       <button

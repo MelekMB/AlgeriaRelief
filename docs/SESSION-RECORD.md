@@ -640,3 +640,14 @@ The sign-in form makes the reference **optional**: "enter your number to continu
 - Six join cases unit-tested, and the same six again through `parsePhone`, covering Algerian local, trunk zero, doubled country code, French `06…`, UAE and UK.
 
 235+ locale keys in both languages, all tests green, build green.
+
+**Chunk 59 — "هذا الطلب في ولاية أخرى غير رحلتك الحالية": a correct rule with no way out.** Omar hit this on the request detail page. The message is `different_wilaya` from `claimRequest`: he already had an open trip in another wilaya, and batching is restricted to one wilaya per trip.
+
+The rule is right — a trip is a single journey, and letting one donor lock requests across the country would starve everyone else. The failure was that there was **no way to abandon a trip**. A donor who changed their mind was stuck for the full 6-hour window, and the family waited for a delivery that was never coming.
+
+Fixes:
+- **`releaseClaim`** — hands a claimed request back voluntarily: status returns to `open`, claim fields cleared, the trip row deleted, and the trip closed once nothing remains on it so the donor can immediately claim elsewhere. Deliberately does **not** count as a no-show: no-shows exist to catch people who take addresses and never appear, and punishing someone for admitting they cannot deliver would push them to say nothing instead, which is worse for the family.
+- **Release button on each item of `/trip`**, with the reason spelled out: "if you cannot deliver, cancel so another donor can take it".
+- **The error is now actionable** — for `differentWilaya` and `tripFull` the claim button shows a link straight to the current trip, where it can be released.
+
+240 locale keys in both languages, tests green, build green.

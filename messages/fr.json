@@ -166,7 +166,8 @@
     "differentWilaya": "Cette demande est dans une autre wilaya que votre trajet en cours.",
     "suspended": "Votre compte est suspendu.",
     "dailyCap": "Limite quotidienne atteinte ({cap} demandes). Réessayez demain.",
-    "homeNeedsVerify": "Cette demande exige un numéro vérifié car la livraison est à domicile."
+    "homeNeedsVerify": "Cette demande exige un numéro vérifié car la livraison est à domicile.",
+    "seeTrip": "Ouvrir votre trajet en cours"
   },
   "trip": {
     "title": "Votre trajet",
@@ -186,7 +187,9 @@
     "wrongCode": "Code incorrect.",
     "addMore": "Ajouter une autre demande à proximité",
     "yourCode": "Votre code",
-    "yourCodeHint": "Donnez ce code au donateur au moment de recevoir l'aide."
+    "yourCodeHint": "Donnez ce code au donateur au moment de recevoir l'aide.",
+    "release": "Annuler la réservation",
+    "releaseHint": "Si vous ne pouvez pas livrer, annulez pour qu'un autre donateur puisse prendre le relais."
   },
   "footer": {
     "abuse": "Signaler un abus",
