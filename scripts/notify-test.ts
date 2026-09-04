@@ -16,9 +16,53 @@ console.log('\nSecrets');
 console.log(`  TELEGRAM_BOT_TOKEN : ${token ? `set (${token.slice(0, 10)}…)` : 'MISSING'}`);
 console.log(`  TELEGRAM_CHAT_ID   : ${chatId ? chatId : 'MISSING'}`);
 
+if (!token) {
+  console.error('\nTELEGRAM_BOT_TOKEN is required. Get it from @BotFather, then add');
+  console.error('it in Replit -> Tools -> Secrets and restart the app.\n');
+  process.exit(1);
+}
+
+// With a token but no chat id, find it rather than making anyone assemble a
+// getUpdates URL by hand — that step is where people get a bare 404 and stop.
+if (!chatId) {
+  console.log('\nNo chat id set. Looking for one…');
+
+  const updates = await fetch(`https://api.telegram.org/bot${token}/getUpdates`);
+  const data = (await updates.json()) as {
+    ok: boolean;
+    description?: string;
+    result?: Array<{ message?: { chat?: { id: number; first_name?: string; title?: string } } }>;
+  };
+
+  if (!data.ok) {
+    console.error(`\nTelegram refused the token: ${data.description ?? 'unknown error'}`);
+    console.error('Get a fresh token from @BotFather with /token.\n');
+    process.exit(1);
+  }
+
+  const chats = new Map<number, string>();
+  for (const update of data.result ?? []) {
+    const chat = update.message?.chat;
+    if (chat) chats.set(chat.id, chat.title ?? chat.first_name ?? '');
+  }
+
+  if (chats.size === 0) {
+    console.error('\nThe bot has no messages yet, so Telegram will not reveal a chat id.');
+    console.error('Open t.me/AlgreliefBot, send it any message, then run this again.');
+    console.error('A bot can never start the conversation itself.\n');
+    process.exit(1);
+  }
+
+  console.log('\nFound:');
+  for (const [id, name] of chats) {
+    console.log(`  TELEGRAM_CHAT_ID = ${id}${name ? `   (${name})` : ''}`);
+  }
+  console.log('\nAdd that as a secret, restart the app, then run this again.\n');
+  process.exit(1);
+}
+
 if (!notifyConfigured()) {
-  console.error('\nBoth secrets are required. Add them in Replit -> Tools -> Secrets,');
-  console.error('then restart the app so it picks them up.\n');
+  console.error('\nBoth secrets are required.\n');
   process.exit(1);
 }
 
