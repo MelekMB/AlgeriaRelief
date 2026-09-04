@@ -693,3 +693,9 @@ He then hit `{"ok":false,"error_code":404,"description":"Not Found"}` from `getU
 Asked how to confirm the bot works, so added **`npm run notify:test`** (`scripts/notify-test.ts`), following the same pattern as `sms:test` and `doctor`: it prints which secrets are present (token truncated), sends one real message, and on failure translates Telegram's terse error codes into the three causes that actually occur — 401 wrong or revoked token, 400 wrong chat id, 403 the bot has never been messaged so it may not initiate. Also extended `doctor` to report whether operator notifications are configured, warning when reports would only be visible in `/admin`.
 
 Build green (28 pages).
+
+**Chunk 64 — Telegram setup, chat id discovery.** `npm run notify:test` on Replit showed `TELEGRAM_BOT_TOKEN` set but `TELEGRAM_CHAT_ID` missing. Rather than send Omar back to assembling a `getUpdates` URL — the step that had already produced a bare 404 and stalled him — extended the script to do it itself: with a token but no chat id it calls `getUpdates`, collects every chat that has messaged the bot, and prints the exact `TELEGRAM_CHAT_ID = …` line to paste.
+
+Verified the failure paths locally with a fake token (`Telegram refused the token: Unauthorized`). On Replit it produced the other expected branch: **"The bot has no messages yet"** — correct, since a bot cannot initiate a conversation and Telegram will not reveal a chat id until it has received one. Next step for him is simply to press START in t.me/AlgreliefBot and re-run.
+
+Two items still outstanding on his side, repeated each turn: **revoke the bot token he pasted into chat** (`/revoke` in @BotFather) since it is permanently visible in the conversation, and set **`ADMIN_PASSWORD`**, without which `/admin` stays locked and the problem-report queue and kill switch are unreachable.
