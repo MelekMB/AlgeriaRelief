@@ -1,4 +1,8 @@
-import { parsePhone as parseAlgerianMobile, formatNational } from '../../src/lib/phone.js';
+import {
+  parsePhone as parseAlgerianMobile,
+  formatNational,
+  joinCountryCode,
+} from '../../src/lib/phone.js';
 import { encrypt, decrypt, sign, unsign, hashToken, numericCode } from '../../src/lib/crypto.js';
 
 let fails = 0;
@@ -30,6 +34,24 @@ for (const [input, expected] of cases) {
   const r = parseAlgerianMobile(input);
   const got = r.ok ? r.e164 : null;
   check(`phone "${input}" -> ${expected ?? 'reject'}`, got === expected, `(got ${got})`);
+}
+
+// --- country picker + local number ---
+const joins: Array<[string, string, string]> = [
+  ['213', '555 12 34 56', '+213555123456'],
+  ['213', '0555123456', '+213555123456'],      // trunk zero dropped
+  ['213', '213555123456', '+213555123456'],    // code typed twice
+  ['33', '06 12 34 56 78', '+33612345678'],    // French trunk zero
+  ['971', '52 131 2164', '+971521312164'],
+  ['44', '07700900123', '+447700900123'],
+];
+for (const [dial, local, expected] of joins) {
+  const got = joinCountryCode(dial, local);
+  check(`join +${dial} "${local}"`, got === expected, `(got ${got})`);
+}
+for (const [dial, local, expected] of joins) {
+  const r = parseAlgerianMobile(joinCountryCode(dial, local));
+  check(`join+parse +${dial} "${local}"`, r.ok && r.e164 === expected, JSON.stringify(r));
 }
 
 check('formatNational', formatNational('+213555123456') === '0555 12 34 56', formatNational('+213555123456'));

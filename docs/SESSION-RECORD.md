@@ -631,3 +631,12 @@ Fix: sessions now carry a **scope**.
 The sign-in form makes the reference **optional**: "enter your number to continue" for donors, with a separate section below for "did you post a request and want to open it?". Leave it blank and you get a claim-only session; fill it correctly and you get a full one.
 
 235 locale keys in both languages, tests green, build green.
+
+**Chunk 58 — Country code picker, Algeria default.** Omar asked for a country selector defaulting to Algeria, rather than making people type `+213` or remember international format.
+
+- `src/data/countryCodes.ts` — 32 dialling codes with Arabic and French names, deliberately ordered rather than alphabetical: **Algeria first and preselected**, then the countries with the largest Algerian communities (France, Spain, Italy, Belgium, UK, Germany, Switzerland, Netherlands, Canada/US), then the neighbours (Tunisia, Morocco, Libya, Mauritania, Mali, Niger), then the Gulf and wider Arab world, then the rest of Europe. Nobody in a wildfire should be scrolling a list of 200 countries.
+- `src/components/PhoneField.tsx` — a shared select + local-number input, used by both the request form and sign-in. The two parts are submitted separately and joined **on the server**, so correctness does not depend on client-side reformatting.
+- `joinCountryCode()` in `phone.ts` strips a leading trunk zero (a prefix in most offered countries and never part of the international form) and also handles someone typing the dialling code into the number box as well.
+- Six join cases unit-tested, and the same six again through `parsePhone`, covering Algerian local, trunk zero, doubled country code, French `06…`, UAE and UK.
+
+235+ locale keys in both languages, all tests green, build green.

@@ -7,6 +7,7 @@ import {
   signinAction,
   type SigninState,
 } from '@/app/[locale]/signin/actions';
+import PhoneField from '@/components/PhoneField';
 
 export default function SigninForm({
   locale,
@@ -119,16 +120,7 @@ export default function SigninForm({
           <label className="text-sm font-semibold" htmlFor="phone">
             {t('phone')}
           </label>
-          <input
-            id="phone"
-            name="phone"
-            type="tel"
-            inputMode="numeric"
-            autoComplete="tel"
-            placeholder={t('phonePlaceholder')}
-            required
-            className="min-h-14 w-full rounded-lg border border-border bg-bg px-3 font-mono text-lg"
-          />
+          <PhoneField locale={locale} />
 
           <p className="text-sm text-muted">{ts('deliverHint')}</p>
 
@@ -153,19 +145,7 @@ export default function SigninForm({
         </>
       ) : !onCodeStep ? (
         <>
-          <label className="text-sm font-semibold" htmlFor="phone">
-            {t('phone')}
-          </label>
-          <input
-            id="phone"
-            name="phone"
-            type="tel"
-            inputMode="numeric"
-            autoComplete="tel"
-            placeholder={t('phonePlaceholder')}
-            required
-            className="min-h-14 w-full rounded-lg border border-border bg-bg px-3 font-mono text-lg"
-          />
+          <PhoneField locale={locale} />
           <p className="text-sm text-muted">{t('phoneHint')}</p>
         </>
       ) : (

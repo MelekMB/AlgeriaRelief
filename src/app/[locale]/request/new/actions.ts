@@ -5,7 +5,7 @@ import { setDraft, type RequestDraft } from '@/lib/draft';
 import { setSession } from '@/lib/session';
 import { requestOtp } from '@/lib/otp';
 import { upsertPerson } from '@/lib/people';
-import { parseAlgerianMobile } from '@/lib/phone';
+import { joinCountryCode, parseAlgerianMobile } from '@/lib/phone';
 import { createRequest, findDuplicate, hasOpenRequest } from '@/lib/requests';
 import { dedupeFingerprint, screenText } from '@/lib/screening';
 import { writesBlocked } from '@/lib/settings';
@@ -40,7 +40,10 @@ export async function submitRequest(
     : 'landmark';
   const address = String(formData.get('address') ?? '').trim();
   const landmarkHint = String(formData.get('landmarkHint') ?? '').trim();
-  const phone = String(formData.get('phone') ?? '').trim();
+  const phone = joinCountryCode(
+    String(formData.get('countryCode') ?? ''),
+    String(formData.get('phone') ?? ''),
+  );
 
   // Operator kill switch / per-wilaya throttle. Checked before any work so a
   // spike can be stopped instantly from the dashboard. A settings-table

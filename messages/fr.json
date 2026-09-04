@@ -88,7 +88,9 @@
     "phoneHint": "Nous envoyons un code de confirmation. Votre numéro n'est jamais public. Hors d'Algérie ? Écrivez le numéro avec l'indicatif, ex. +33.",
     "submit": "Publier la demande",
     "moreDetail": "Plus de détails",
-    "landmarkOnlyNotice": "La livraison à domicile est indisponible : la vérification des numéros n'est pas activée. Choisissez un lieu public — c'est de toute façon le plus sûr."
+    "landmarkOnlyNotice": "La livraison à domicile est indisponible : la vérification des numéros n'est pas activée. Choisissez un lieu public — c'est de toute façon le plus sûr.",
+    "country": "Pays",
+    "phoneLocalPlaceholder": "555 12 34 56"
   },
   "formErrors": {
     "category": "Choisissez un type d'aide.",

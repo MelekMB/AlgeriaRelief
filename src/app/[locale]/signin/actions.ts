@@ -5,7 +5,7 @@ import { issueCodeOnly, isCodeConsumed, requestOtp, verifyOtp } from '@/lib/otp'
 import { clearPending, getPending, setPending } from '@/lib/pendingVerification';
 import { upsertPerson } from '@/lib/people';
 import { whatsappConfigured, whatsappVerifyLink } from '@/lib/whatsapp';
-import { parseAlgerianMobile } from '@/lib/phone';
+import { joinCountryCode, parseAlgerianMobile } from '@/lib/phone';
 import { hashToken } from '@/lib/crypto';
 import { findByReference } from '@/lib/requests';
 import { smsConfigured } from '@/lib/sms';
@@ -42,7 +42,9 @@ export async function signinAction(
   // never be enough - otherwise anyone could open a stranger's request, read
   // their door code, or close it on them.
   if (!canVerify) {
-    const parsed = parseAlgerianMobile(String(formData.get('phone') ?? ''));
+    const parsed = parseAlgerianMobile(
+      joinCountryCode(String(formData.get('countryCode') ?? ''), String(formData.get('phone') ?? '')),
+    );
     if (!parsed.ok) return { step: 'reference', error: 'phone' };
 
     const reference = String(formData.get('reference') ?? '').trim();
@@ -66,7 +68,9 @@ export async function signinAction(
   }
 
   if (intent === 'send') {
-    const parsed = parseAlgerianMobile(String(formData.get('phone') ?? ''));
+    const parsed = parseAlgerianMobile(
+      joinCountryCode(String(formData.get('countryCode') ?? ''), String(formData.get('phone') ?? '')),
+    );
     if (!parsed.ok) return { step: 'phone', error: 'phone' };
 
     // Free path: issue a code and let the user send it to us on WhatsApp.

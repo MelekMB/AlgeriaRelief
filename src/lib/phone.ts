@@ -88,3 +88,23 @@ export function formatNational(e164: string): string {
   // Foreign numbers stay in international form, lightly grouped.
   return `+${digits.replace(/(\d{1,4})(?=(\d{3})+$)/g, '$1 ')}`.trim();
 }
+
+/**
+ * Joins a dialling code chosen from the picker with the local number typed
+ * beside it.
+ *
+ * A leading zero in the local part is a trunk prefix in most of the countries
+ * offered (Algeria, France, UK, Germany, Morocco...) and is never part of the
+ * international form, so it is dropped. Countries whose numbers do not start
+ * with zero are unaffected.
+ */
+export function joinCountryCode(dial: string, local: string): string {
+  const cc = (dial ?? '').replace(/\D/g, '');
+  let rest = (local ?? '').replace(/\D/g, '');
+
+  // Someone who typed the country code into the number box too.
+  if (cc && rest.startsWith(cc) && rest.length > cc.length) rest = rest.slice(cc.length);
+  if (rest.startsWith('0')) rest = rest.slice(1);
+
+  return cc ? `+${cc}${rest}` : rest;
+}

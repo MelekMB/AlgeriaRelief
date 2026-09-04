@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { submitRequest, type SubmitState } from '@/app/[locale]/request/new/actions';
+import PhoneField from '@/components/PhoneField';
 
 type Option = { code: string; label: string };
 type Commune = { id: number; nameAr: string; nameFr: string };
@@ -358,19 +359,7 @@ export default function RequestForm({
       {/* 5 — phone */}
       <fieldset>
         <legend className="mb-2 text-base font-bold">{t('step5')}</legend>
-        <label className="sr-only" htmlFor="phone">
-          {t('phone')}
-        </label>
-        <input
-          id="phone"
-          name="phone"
-          type="tel"
-          inputMode="numeric"
-          autoComplete="tel"
-          placeholder={t('phonePlaceholder')}
-          className="min-h-12 w-full rounded-lg border border-border bg-bg px-3 font-mono"
-          required
-        />
+        <PhoneField locale={locale} />
         <p className="mt-1 text-sm text-muted">{t('phoneHint')}</p>
       </fieldset>
 
