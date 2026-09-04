@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { and, gt, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { issueReports } from '@/db/schema';
+import { notifyOperator } from '@/lib/notify';
 import { getSession } from '@/lib/session';
 
 export type ReportState = { done?: boolean; error?: 'empty' | 'tooMany' | 'generic' };
@@ -57,6 +58,19 @@ export async function reportIssue(_prev: ReportState, formData: FormData): Promi
       userAgent: h.get('user-agent')?.slice(0, 300) ?? null,
       ip,
     });
+
+    // Push it to the operator immediately. Awaited so a failure is logged,
+    // but notifyOperator never throws.
+    await notifyOperator(
+      [
+        '⚠️ Problem reported',
+        body.slice(0, 500),
+        pagePath ? `Page: ${pagePath}` : null,
+        contact ? `Contact: ${contact}` : null,
+      ]
+        .filter(Boolean)
+        .join(String.fromCharCode(10)),
+    );
 
     return { done: true };
   } catch (err) {

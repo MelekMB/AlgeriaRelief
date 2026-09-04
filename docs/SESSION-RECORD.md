@@ -673,3 +673,15 @@ Home now links to `/me` instead of only `/my-request`, giving both roles one doo
 - Admin gained an unresolved-issues queue at the top, showing the text, the page, the timestamp and any contact, with a "done" button.
 
 272 locale keys in both languages, tests green, build green (28 pages).
+
+**Chunk 62 — "Where does the complaint go?" — nowhere, until now.** Honest answer to Omar's question: reports went into the database and were visible only at `/admin`, and since he had never set `ADMIN_PASSWORD` they were piling up entirely unread. A report that has to be remembered is a report that is never seen — a real gap for a one-person operation.
+
+Added `src/lib/notify.ts`, an optional operator push channel over **Telegram**. Chosen because it is the only channel in this project with no wall in front of it: a bot takes two minutes via @BotFather, costs nothing, has no meaningful volume limit, and needs no business account, verification or approval — unlike SMS (paid), WhatsApp (Meta approval, currently blocked) and email (yet another provider signup). Given how much of this session was lost to external-platform gates, that mattered more than features.
+
+Wired to the two things worth interrupting someone for:
+- a **problem report** — text, page path and any contact, pushed the moment it is submitted;
+- an **auto-quarantined listing** — the weighted flag total and the reason given.
+
+`notifyOperator` never throws: a notification failure must not break the thing that triggered it, least of all someone reporting a problem. Entirely optional — with nothing configured the app behaves exactly as before and everything remains readable in `/admin`. Setup documented in `.env.example`, including how to obtain the chat id from `getUpdates`.
+
+272 locale keys in both languages, tests green, build green (28 pages).

@@ -1,6 +1,7 @@
 import { and, eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { auditLog, flags, people, requests, reviews } from '@/db/schema';
+import { notifyOperator } from './notify';
 import { flagWeight, getPerson } from './people';
 
 /**
@@ -77,6 +78,12 @@ export async function flagRequest(
         targetId: requestId,
         metadata: JSON.stringify({ weightedFlags: total }),
       });
+      await notifyOperator(
+        `🚩 A request was auto-hidden after ${total} weighted flags.
+Reason given: ${reason.slice(0, 300)}
+Review it in /admin.`,
+      );
+
       return { ok: true, quarantined: true };
     }
   }
