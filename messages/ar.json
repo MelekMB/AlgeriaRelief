@@ -14,7 +14,8 @@
     "optional": "اختياري",
     "required": "مطلوب",
     "all": "الكل",
-    "sending": "جارٍ الإرسال…"
+    "sending": "جارٍ الإرسال…",
+    "signOut": "الخروج من هذا الجهاز"
   },
   "emergency": {
     "bannerTitle": "هل حياة شخص في خطر الآن؟",
@@ -282,5 +283,24 @@
     "deliverHint": "رقمك يظهر فقط للعائلة التي ستوصل لها، ولا يظهر للعموم.",
     "haveRequestTitle": "هل نشرت طلباً وتريد فتحه؟",
     "referenceOptional": "رمز الطلب (اختياري)"
+  },
+  "profile": {
+    "title": "حسابي",
+    "yourNumber": "رقمك",
+    "request": "طلبك",
+    "requestOpen": "لديك طلب مفتوح",
+    "noRequest": "لم تنشر أي طلب.",
+    "postRequest": "اطلب مساعدة",
+    "openRequest": "افتح طلبك",
+    "trip": "رحلتك",
+    "tripOpen": "لديك {count} طلب محجوز",
+    "noTrip": "لم تحجز أي طلب للتوصيل.",
+    "openTrip": "افتح رحلتك",
+    "browse": "تصفّح الاحتياجات",
+    "stats": "سجلّك",
+    "delivered": "أوصلت",
+    "received": "استلمت",
+    "limited": "أنت مسجَّل للتوصيل فقط. لفتح طلبك الخاص، أدخل رمز الطلب.",
+    "signIn": "الدخول برقمك"
   }
 }

@@ -651,3 +651,16 @@ Fixes:
 - **The error is now actionable** — for `differentWilaya` and `tripFull` the claim button shows a link straight to the current trip, where it can be released.
 
 240 locale keys in both languages, tests green, build green.
+
+**Chunk 60 — Added a profile hub; the app had no sense of "where am I".** Omar said the current arrangement was confusing. It was: a posted request lived at `/my-request`, a claimed delivery at `/trip`, sign-in was a separate dead-end form, and **nothing anywhere said whether you were signed in or as which number**. The home page linked only to "your request", so anyone whose role was delivering had no entry point at all. Someone doing both — posting for their family and delivering for a neighbour — could not see both.
+
+New `/me` ("حسابي" / "Mon compte") answers "who am I and what do I have open" in one screen:
+- **Your number, masked** — resolves the commonest confusion, which number this browser is signed in as. `ownMaskedPhone` decrypts the person's own number and hides all but the last two digits, since phones get handed around.
+- **Your request** — a summary and a link if you have one; an invitation to post if not; and if the session is claim-only, an explanation that it is a delivery-only sign-in plus how to open a request with the reference code.
+- **Your trip** — how many requests are reserved, with a link, or a prompt to browse.
+- **Your record** — deliveries and receipts, shown only once there is something to show.
+- **Sign out.**
+
+Signed out, the page explains itself and offers the two ways forward rather than bouncing to a bare form.
+
+Home now links to `/me` instead of only `/my-request`, giving both roles one door. 258 locale keys in both languages, tests green, build green (28 pages).

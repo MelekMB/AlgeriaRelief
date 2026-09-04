@@ -1,7 +1,8 @@
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { people } from '@/db/schema';
-import { encrypt, hashToken } from './crypto';
+import { decrypt, encrypt, hashToken } from './crypto';
+import { formatNational } from './phone';
 
 export type PersonRecord = typeof people.$inferSelect;
 
@@ -84,4 +85,23 @@ export async function markVerifiedByPhoneHash(phoneHash: string): Promise<boolea
     .returning({ id: people.id });
 
   return updated.length > 0;
+}
+
+/**
+ * The signed-in person's own number, partly hidden.
+ *
+ * Showing it answers "which number am I signed in as?", which is the thing
+ * people get lost on when they have used more than one. Masked because a
+ * phone gets handed around and glanced at over shoulders.
+ */
+export async function ownMaskedPhone(personId: number): Promise<string | null> {
+  const person = await getPerson(personId);
+  if (!person) return null;
+
+  try {
+    const national = formatNational(decrypt(person.phoneE164));
+    return national.replace(/\d(?=\d{2})/g, '•');
+  } catch {
+    return null;
+  }
 }

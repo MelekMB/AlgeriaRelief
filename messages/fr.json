@@ -14,7 +14,8 @@
     "optional": "facultatif",
     "required": "obligatoire",
     "all": "Tout",
-    "sending": "Envoi…"
+    "sending": "Envoi…",
+    "signOut": "Se déconnecter de cet appareil"
   },
   "emergency": {
     "bannerTitle": "Une vie est-elle en danger immédiat ?",
@@ -282,5 +283,24 @@
     "deliverHint": "Votre numéro n'est visible que par la famille à qui vous livrez, jamais publiquement.",
     "haveRequestTitle": "Vous avez publié une demande et voulez la rouvrir ?",
     "referenceOptional": "Code de la demande (facultatif)"
+  },
+  "profile": {
+    "title": "Mon compte",
+    "yourNumber": "Votre numéro",
+    "request": "Votre demande",
+    "requestOpen": "Vous avez une demande ouverte",
+    "noRequest": "Vous n'avez publié aucune demande.",
+    "postRequest": "Demander de l'aide",
+    "openRequest": "Ouvrir votre demande",
+    "trip": "Votre trajet",
+    "tripOpen": "Vous avez {count} demande(s) réservée(s)",
+    "noTrip": "Vous n'avez réservé aucune demande.",
+    "openTrip": "Ouvrir votre trajet",
+    "browse": "Parcourir les besoins",
+    "stats": "Votre historique",
+    "delivered": "Livrées",
+    "received": "Reçues",
+    "limited": "Vous êtes connecté pour livrer uniquement. Pour ouvrir votre propre demande, saisissez le code de la demande.",
+    "signIn": "Se connecter avec votre numéro"
   }
 }

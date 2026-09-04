@@ -21,7 +21,7 @@ export default async function HomePage({
   const t = await getTranslations('home');
   const tf = await getTranslations('footer');
   const tl = await getTranslations('ledger');
-  const tm = await getTranslations('myRequest');
+  const tp = await getTranslations('profile');
 
   // A homepage that 500s during a wildfire is worse than one without numbers.
   const stats = await deliveryStats().catch(() => ({ delivered: 0, open: 0 }));
@@ -97,11 +97,13 @@ export default async function HomePage({
         </ul>
       </section>
 
+      {/* One entry point for both roles. Previously the home page linked only
+          to "your request", so anyone delivering had nowhere to go. */}
       <Link
-        href="/my-request"
+        href="/me"
         className="flex min-h-12 items-center justify-center text-sm font-semibold text-brand underline"
       >
-        {tm('title')}
+        {tp('title')}
       </Link>
 
       <footer className="mt-auto flex gap-4 pt-4 text-sm text-muted">
