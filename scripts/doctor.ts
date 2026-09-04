@@ -26,6 +26,8 @@ async function main() {
     ['SESSION_SECRET', true],
     ['ADMIN_PASSWORD', false],
     ['ABUSE_EMAIL', false],
+    ['TELEGRAM_BOT_TOKEN', false],
+    ['TELEGRAM_CHAT_ID', false],
   ] as Array<[string, boolean]>) {
     const value = process.env[name];
     if (value) {

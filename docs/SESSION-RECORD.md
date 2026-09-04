@@ -685,3 +685,11 @@ Wired to the two things worth interrupting someone for:
 `notifyOperator` never throws: a notification failure must not break the thing that triggered it, least of all someone reporting a problem. Entirely optional — with nothing configured the app behaves exactly as before and everything remains readable in `/admin`. Setup documented in `.env.example`, including how to obtain the chat id from `getUpdates`.
 
 272 locale keys in both languages, tests green, build green (28 pages).
+
+**Chunk 63 — Telegram bot created; added a one-command test for it.** Omar created **@AlgreliefBot** and pasted the bot token into the chat. Flagged immediately that the token was now exposed and must be revoked via `@BotFather` `/revoke`, and that the replacement should go straight into Replit Secrets and never into chat. Did **not** use the exposed token for any network call.
+
+He then hit `{"ok":false,"error_code":404,"description":"Not Found"}` from `getUpdates`. Explained that 404 means a malformed URL rather than a bad token (which returns 401) — usually the angle brackets left in around the token, or the missing `bot` prefix that must run straight into the token. Offered the simpler route: message **@userinfobot**, which replies with the chat id directly and avoids URL assembly entirely.
+
+Asked how to confirm the bot works, so added **`npm run notify:test`** (`scripts/notify-test.ts`), following the same pattern as `sms:test` and `doctor`: it prints which secrets are present (token truncated), sends one real message, and on failure translates Telegram's terse error codes into the three causes that actually occur — 401 wrong or revoked token, 400 wrong chat id, 403 the bot has never been messaged so it may not initiate. Also extended `doctor` to report whether operator notifications are configured, warning when reports would only be visible in `/admin`.
+
+Build green (28 pages).

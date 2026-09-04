@@ -18,7 +18,8 @@
     "smoke": "tsx scripts/smoke-test.ts",
     "doctor": "tsx scripts/doctor.ts",
     "sms:test": "tsx scripts/sms-test.ts",
-    "db:ensure": "tsx scripts/ensure-schema.ts"
+    "db:ensure": "tsx scripts/ensure-schema.ts",
+    "notify:test": "tsx scripts/notify-test.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.36.4",
