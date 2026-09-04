@@ -272,7 +272,10 @@
     "saved": "Enregistré.",
     "approveTitle": "Vérifier un numéro manuellement",
     "approveHint": "Saisissez le code reçu sur WhatsApp ; le numéro de l'expéditeur sera vérifié.",
-    "approve": "Vérifier"
+    "approve": "Vérifier",
+    "issues": "Problèmes signalés",
+    "issueNone": "Aucun signalement.",
+    "issueDone": "Traité"
   },
   "signin": {
     "referenceLabel": "Code de la demande",
@@ -302,5 +305,18 @@
     "received": "Reçues",
     "limited": "Vous êtes connecté pour livrer uniquement. Pour ouvrir votre propre demande, saisissez le code de la demande.",
     "signIn": "Se connecter avec votre numéro"
+  },
+  "issue": {
+    "button": "Signaler un problème de l'application",
+    "title": "Quel est le problème ?",
+    "hint": "Expliquez ce qui n'a pas fonctionné. Nous saurons automatiquement sur quelle page vous étiez.",
+    "placeholder": "Ex. : j'ai appuyé sur le bouton et rien ne s'est passé.",
+    "contact": "Votre numéro ou e-mail (facultatif)",
+    "contactPlaceholder": "Si vous souhaitez une réponse",
+    "send": "Envoyer",
+    "thanks": "Merci. Votre signalement est bien reçu.",
+    "empty": "Décrivez brièvement le problème.",
+    "tooMany": "Trop de signalements envoyés. Réessayez plus tard.",
+    "generic": "L'envoi a échoué. Réessayez."
   }
 }

@@ -664,3 +664,12 @@ New `/me` ("حسابي" / "Mon compte") answers "who am I and what do I have ope
 Signed out, the page explains itself and offers the two ways forward rather than bouncing to a bare form.
 
 Home now links to `/me` instead of only `/my-request`, giving both roles one door. 258 locale keys in both languages, tests green, build green (28 pages).
+
+**Chunk 61 — "Report a problem" button on every page.** Omar asked for a way for users to report issues. Built it as something distinct from the existing controls: `flags` is "this listing is abusive", `/abuse` is "report a scam", and this is "the app itself is broken" — which previously had no channel at all, so a broken screen simply lost that person in silence.
+
+- New `issue_reports` table (body, page path, optional contact, person if signed in, user agent, IP, resolved flag), added to `ensure-schema.ts` so production creates it on boot.
+- `reportIssue` server action: **captures the page path automatically**, because people describe problems as "the button didn't work" without saying where, and the location is what makes a report actionable. Optional contact field only if they want a reply. Capped at 5 per hour per IP. Any failure is caught and logged — someone reporting a problem must not be met with a second one.
+- `ReportIssueButton` rendered from the locale layout, so it is on **every page**. Placed inline at the bottom rather than as a floating overlay, which would cover content on the short screens this app targets.
+- Admin gained an unresolved-issues queue at the top, showing the text, the page, the timestamp and any contact, with a "done" button.
+
+272 locale keys in both languages, tests green, build green (28 pages).

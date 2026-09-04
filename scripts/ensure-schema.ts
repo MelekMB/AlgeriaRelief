@@ -44,6 +44,23 @@ const statements: Array<{ what: string; run: () => Promise<unknown> }> = [
       ),
   },
   {
+    what: 'issue_reports table',
+    run: () =>
+      db.execute(sql`
+        CREATE TABLE IF NOT EXISTS issue_reports (
+          id serial PRIMARY KEY,
+          body text NOT NULL,
+          page_path text,
+          contact text,
+          person_id integer REFERENCES people(id) ON DELETE SET NULL,
+          user_agent text,
+          ip text,
+          resolved_at timestamptz,
+          created_at timestamptz NOT NULL DEFAULT now()
+        )
+      `),
+  },
+  {
     what: 'settings table',
     run: () =>
       db.execute(sql`

@@ -302,3 +302,23 @@ export const settings = pgTable('settings', {
   value: text('value').notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+
+/* ------------------------------------------------------------------ */
+/* Problem reports — the app itself is broken, not a listing.          */
+/* Distinct from `flags`, which is about a request being abusive.      */
+/* ------------------------------------------------------------------ */
+
+export const issueReports = pgTable('issue_reports', {
+  id: serial('id').primaryKey(),
+  body: text('body').notNull(),
+  /** Where they were when it went wrong - the single most useful field. */
+  pagePath: text('page_path'),
+  /** Optional: only if they choose to leave one so you can reply. */
+  contact: text('contact'),
+  personId: integer('person_id').references(() => people.id, { onDelete: 'set null' }),
+  userAgent: text('user_agent'),
+  ip: text('ip'),
+  resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});

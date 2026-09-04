@@ -1,4 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { desc, isNull } from 'drizzle-orm';
+import { db } from '@/db';
+import { issueReports } from '@/db/schema';
 import { listQuarantined } from '@/lib/flags';
 import { deliveryStats } from '@/lib/jobs';
 import { isReadOnly, throttledWilayas } from '@/lib/settings';
@@ -23,11 +26,17 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
     );
   }
 
-  const [stats, quarantined, readOnly, throttled] = await Promise.all([
+  const [stats, quarantined, readOnly, throttled, issues] = await Promise.all([
     deliveryStats(),
     listQuarantined(),
     isReadOnly(),
     throttledWilayas(),
+    db
+      .select()
+      .from(issueReports)
+      .where(isNull(issueReports.resolvedAt))
+      .orderBy(desc(issueReports.createdAt))
+      .limit(30),
   ]);
 
   return (
@@ -124,6 +133,37 @@ export default async function AdminPage({ params }: { params: Promise<{ locale: 
           </button>
         </form>
         <p className="mt-1 text-xs text-muted">{t('throttleHint')}</p>
+      </section>
+
+      {/* What users say is broken. Without this the only channel is someone
+          messaging the operator directly. */}
+      <section>
+        <h2 className="text-base font-bold">
+          {t('issues')} (<bdi>{issues.length}</bdi>)
+        </h2>
+        {issues.length === 0 ? (
+          <p className="mt-2 text-sm text-muted">{t('issueNone')}</p>
+        ) : (
+          <ul className="mt-2 flex flex-col gap-3">
+            {issues.map((issue) => (
+              <li key={issue.id} className="rounded-xl border border-border bg-surface p-4">
+                <p className="text-sm">{issue.body}</p>
+                <p className="mt-1 font-mono text-xs text-muted">
+                  {issue.pagePath} · {issue.createdAt.toISOString().slice(0, 16).replace('T', ' ')}
+                  {issue.contact ? ` · ${issue.contact}` : ''}
+                </p>
+                <form action={settingsAction} className="mt-2">
+                  <input type="hidden" name="locale" value={locale} />
+                  <input type="hidden" name="intent" value="resolve_issue" />
+                  <input type="hidden" name="issueId" value={issue.id} />
+                  <button type="submit" className="min-h-12 text-sm text-brand underline">
+                    {t('issueDone')}
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section>

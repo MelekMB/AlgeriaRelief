@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
-import { auditLog, requests } from '@/db/schema';
+import { auditLog, issueReports, requests } from '@/db/schema';
 import { safeEqual, sign, unsign } from '@/lib/crypto';
 import { KEYS, setSetting } from '@/lib/settings';
 import { approveCodeManually } from '@/lib/whatsapp';
@@ -67,6 +67,16 @@ export async function settingsAction(formData: FormData): Promise<void> {
       action: 'set_throttle',
       metadata: codes,
     });
+  }
+
+  if (intent === 'resolve_issue') {
+    const issueId = Number(formData.get('issueId') ?? 0);
+    if (issueId) {
+      await db
+        .update(issueReports)
+        .set({ resolvedAt: new Date() })
+        .where(eq(issueReports.id, issueId));
+    }
   }
 
   if (intent === 'approve_code') {
