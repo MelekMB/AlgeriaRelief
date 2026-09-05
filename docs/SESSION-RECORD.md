@@ -714,3 +714,9 @@ Wrote three pieces rather than one, on the reasoning that LinkedIn reaches his p
 Deliberately claimed **no traction**, since the app has no real users yet — the post is an announcement and a request for help, not a success story.
 
 Flagged before publishing, because a public link brings real people: the **emergency numbers are still unverified** (`EMERGENCY_VERIFIED = false`) and **no native Algerian speaker has read the Arabic screens**. Both roughly twenty-minute jobs. Also advised posting one genuine request first so the board is not empty when the first visitor arrives.
+
+**Chunk 67 — "Algeria" added to the home page heading.** The header read only "مساعدة حرائق الغابات" / "Entraide feux de forêt", with no country named — a problem once the link is shared beyond people who already know what it is for. Now **"مساعدة حرائق الغابات في الجزائر"** and **"Entraide feux de forêt en Algérie"**. The browser tab title already carried الجزائر; this is the visible on-page heading.
+
+Note for future edits: writing non-ASCII through a Python `print` on this Windows console raises `UnicodeEncodeError` (cp1252) and can abort a loop **after** the first file is written — which happened here, leaving Arabic updated and French not. It did not trip the locale-parity gate because only a value changed, not a key. Re-ran without printing, then verified both values by reading the files back with `sys.stdout.reconfigure(encoding='utf-8')`.
+
+Could not confirm from the prerendered HTML this time: the home page became `force-dynamic` when the delivery ledger was added, so it is server-rendered on demand and no longer emits `ar.html`/`fr.html` at build. Verified instead that both message files hold the new value and the page renders `t('title')`. Build green (28 pages).
