@@ -703,3 +703,14 @@ Two items still outstanding on his side, repeated each turn: **revoke the bot to
 **Chunk 65 — Telegram notifications working.** After pressing START in t.me/AlgreliefBot, `npm run notify:test` discovered the chat id (`6909859466`) and printed the exact secret line to paste. A first re-run still reported it MISSING; diagnosed the two Replit traps rather than guessing: an **already-open Shell tab keeps the old environment** and only newly started processes receive new secrets, and Replit keeps **two separate secret stores** — `Tools -> Secrets` for the workspace and Shell, and `Publishing -> Adjust settings -> Production app secrets` for the live app. Same shape of trap as the two databases. After a fresh Shell, the test printed **SENT**.
 
 Operator notifications are therefore proven end to end in the workspace. Remaining for the live app: the same two secrets must also be added to the **deployment** secret store, since the workspace and the published app do not share them.
+
+**Chunk 66 — Launch copy written.** Omar asked for a LinkedIn post to announce the app and drive usage.
+
+Wrote three pieces rather than one, on the reasoning that LinkedIn reaches his professional network while the actual users — affected families and drivers — are in Facebook and WhatsApp groups:
+- **LinkedIn post** leading with the coordination failure ("donations pile up where nobody needs them; someone drives two hours to a village already helped that morning"), naming the claim lock as the mechanism and explaining why it matters in plain terms, then the two deliberate constraints (no money ever, no home addresses) as trust signals rather than features. Closes with a concrete ask: share it, and report what breaks.
+- **Short Arabic version** for WhatsApp/Facebook groups.
+- **Short French version** for the same.
+
+Deliberately claimed **no traction**, since the app has no real users yet — the post is an announcement and a request for help, not a success story.
+
+Flagged before publishing, because a public link brings real people: the **emergency numbers are still unverified** (`EMERGENCY_VERIFIED = false`) and **no native Algerian speaker has read the Arabic screens**. Both roughly twenty-minute jobs. Also advised posting one genuine request first so the board is not empty when the first visitor arrives.
