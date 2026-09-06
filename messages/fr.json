@@ -38,7 +38,10 @@
     "safetyNoMoney": "Cette plateforme ne demande jamais d'argent. N'envoyez jamais d'argent à qui que ce soit ici.",
     "safetyMeet": "Vous pouvez choisir un lieu public de rendez-vous au lieu de votre adresse.",
     "safetyVerify": "Nous ne vérifions pas l'identité des personnes. Restez prudent.",
-    "noVerification": "Attention : la vérification des numéros n'est pas activée. Personne n'est vérifié. Rencontrez-vous toujours dans un lieu public et n'envoyez jamais d'argent."
+    "noVerification": "Attention : la vérification des numéros n'est pas activée. Personne n'est vérifié. Rencontrez-vous toujours dans un lieu public et n'envoyez jamais d'argent.",
+    "step1": "Publiez ce dont vous avez besoin et votre commune. Vous recevez deux codes : celui de votre demande et celui de la remise.",
+    "step2": "Un seul donateur réserve votre demande, pour que plusieurs personnes n'aillent pas à la même maison.",
+    "step3": "Il vous apporte l'aide, et vous lui lisez le code de remise pour confirmer."
   },
   "categories": {
     "water_food": "Eau et nourriture",
@@ -149,7 +152,10 @@
     "deliverHome": "Livraison à domicile",
     "deliverLandmark": "Rendez-vous public",
     "open": "Ouvrir",
-    "count": "{count} demande(s)"
+    "count": "{count} demande(s)",
+    "allWilayas": "Toutes les wilayas",
+    "allCategories": "Tous les types",
+    "clearFilters": "Voir toutes les demandes"
   },
   "detail": {
     "title": "Détail de la demande",

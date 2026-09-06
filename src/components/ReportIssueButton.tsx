@@ -37,7 +37,7 @@ export default function ReportIssueButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-6 min-h-12 self-center text-sm text-muted underline"
+        className="mt-6 min-h-12 self-center rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-text"
       >
         {t('button')}
       </button>

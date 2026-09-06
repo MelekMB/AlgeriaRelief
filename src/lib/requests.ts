@@ -428,3 +428,59 @@ export async function getOwnConfirmCode(
     .limit(1);
   return row?.code ?? null;
 }
+
+/* ------------------------------------------------------------------ */
+/* Counts for the filter chips                                         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Open requests per wilaya, busiest first.
+ *
+ * Two separate reviewers looked at the needs page and concluded there was no
+ * way to filter by wilaya, when a dropdown was sitting right there. Showing
+ * the wilayas that actually have requests, with counts, turns an invisible
+ * form control into something you can read at a glance.
+ */
+export async function countOpenByWilaya() {
+  return db
+    .select({
+      code: wilayas.code,
+      nameAr: wilayas.nameAr,
+      nameFr: wilayas.nameFr,
+      n: sql<number>`count(*)::int`,
+    })
+    .from(requests)
+    .innerJoin(communes, eq(communes.id, requests.communeId))
+    .innerJoin(wilayas, eq(wilayas.id, communes.wilayaId))
+    .where(
+      and(
+        eq(requests.status, 'open'),
+        gt(requests.expiresAt, new Date()),
+        or(isNull(requests.claimExpiresAt), sql`${requests.claimExpiresAt} < now()`)!,
+      ),
+    )
+    .groupBy(wilayas.code, wilayas.nameAr, wilayas.nameFr)
+    .orderBy(desc(sql`count(*)`));
+}
+
+/** Open requests per category, for the second row of chips. */
+export async function countOpenByCategory() {
+  return db
+    .select({
+      code: categories.code,
+      nameAr: categories.nameAr,
+      nameFr: categories.nameFr,
+      n: sql<number>`count(*)::int`,
+    })
+    .from(requests)
+    .innerJoin(categories, eq(categories.id, requests.categoryId))
+    .where(
+      and(
+        eq(requests.status, 'open'),
+        gt(requests.expiresAt, new Date()),
+        or(isNull(requests.claimExpiresAt), sql`${requests.claimExpiresAt} < now()`)!,
+      ),
+    )
+    .groupBy(categories.code, categories.nameAr, categories.nameFr)
+    .orderBy(desc(sql`count(*)`));
+}

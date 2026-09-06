@@ -27,42 +27,61 @@ export default async function HomePage({
   const stats = await deliveryStats().catch(() => ({ delivered: 0, open: 0 }));
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-6 px-4 py-6">
+    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-5 px-4 py-6">
       <header className="flex items-start justify-between gap-4">
         <h1 className="text-2xl font-bold leading-tight">{t('title')}</h1>
         <LanguageToggle locale={locale as Locale} />
       </header>
 
-      <EmergencyBanner />
+      {/* One line, not a wall. The full panel is at the foot of the page. */}
+      <EmergencyBanner variant="compact" />
 
       <p className="text-base text-muted">{t('subtitle')}</p>
 
-      {/* People must know nobody has been verified before they act on a
-          listing. Saying it once, plainly, near the top. */}
       {!smsConfigured() && (
         <p className="rounded-xl border border-border bg-surface p-3 text-sm">
           {t('noVerification')}
         </p>
       )}
 
-      {/* Two doors and nothing else. No hero copy, no carousel. */}
-      <nav aria-label={t('title')} className="flex flex-col gap-4">
+      {/* Two doors of equal weight. They used to be stacked with the first
+          filled and the second outlined, which read as "selected" and "not
+          selected" rather than as two equal choices. */}
+      <nav aria-label={t('title')} className="grid grid-cols-2 gap-3">
         <Link
           href="/request/new"
-          className="flex min-h-24 flex-col justify-center rounded-2xl bg-brand px-5 py-4 text-brand-contrast"
+          className="flex min-h-28 flex-col justify-center rounded-2xl border-2 border-brand bg-surface px-4 py-4 text-brand"
         >
-          <span className="text-xl font-bold">{t('needHelp')}</span>
-          <span className="mt-1 text-sm opacity-90">{t('needHelpHint')}</span>
+          <span className="text-lg font-bold leading-tight">{t('needHelp')}</span>
+          <span className="mt-1 text-xs text-muted">{t('needHelpHint')}</span>
         </Link>
 
         <Link
           href="/needs"
-          className="flex min-h-24 flex-col justify-center rounded-2xl border-2 border-brand px-5 py-4 text-brand"
+          className="flex min-h-28 flex-col justify-center rounded-2xl border-2 border-brand bg-surface px-4 py-4 text-brand"
         >
-          <span className="text-xl font-bold">{t('canHelp')}</span>
-          <span className="mt-1 text-sm opacity-90">{t('canHelpHint')}</span>
+          <span className="text-lg font-bold leading-tight">{t('canHelp')}</span>
+          <span className="mt-1 text-xs text-muted">{t('canHelpHint')}</span>
         </Link>
       </nav>
+
+      {/* Most people arrive from a shared link with no idea what this is or
+          how it works. Three steps, in text so it translates and mirrors. */}
+      <section aria-labelledby="how-title" className="rounded-xl border border-border p-4">
+        <h2 id="how-title" className="text-sm font-bold">
+          {t('howItWorks')}
+        </h2>
+        <ol className="mt-3 flex flex-col gap-3">
+          {[t('step1'), t('step2'), t('step3')].map((step, index) => (
+            <li key={step} className="flex items-start gap-3">
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-bold text-brand-contrast">
+                <bdi>{index + 1}</bdi>
+              </span>
+              <span className="text-sm leading-snug">{step}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
 
       {/* Confirmed deliveries are the trust signal that recruits the next
           donor — a number nobody can inflate without a real recipient. */}
@@ -97,16 +116,18 @@ export default async function HomePage({
         </ul>
       </section>
 
-      {/* One entry point for both roles. Previously the home page linked only
-          to "your request", so anyone delivering had nowhere to go. */}
       <Link
         href="/me"
-        className="flex min-h-12 items-center justify-center text-sm font-semibold text-brand underline"
+        className="flex min-h-12 items-center justify-center rounded-lg border border-border text-sm font-semibold text-brand"
       >
         {tp('title')}
       </Link>
 
-      <footer className="mt-auto flex gap-4 pt-4 text-sm text-muted">
+      {/* The full emergency panel lives here, out of the way of the two
+          doors but still on the page. */}
+      <EmergencyBanner />
+
+      <footer className="mt-auto flex gap-4 pt-2 text-sm text-muted">
         <Link href="/abuse">{tf('abuse')}</Link>
         <Link href="/privacy">{tf('privacy')}</Link>
       </footer>
